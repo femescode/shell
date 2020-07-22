@@ -71,20 +71,20 @@ set softtabstop=4                " insert mode tab and backspace use 4 spaces
 
 " NOT SUPPORT
 " fold
-set foldenable
-set foldmethod=indent
-set foldlevel=99
-let g:FoldMethod = 0
-map <leader>zz :call ToggleFold()<cr>
-fun! ToggleFold()
-    if g:FoldMethod == 0
-        exe "normal! zM"
-        let g:FoldMethod = 1
-    else
-        exe "normal! zR"
-        let g:FoldMethod = 0
-    endif
-endfun
+"set foldenable
+"set foldmethod=indent
+"set foldlevel=99
+"let g:FoldMethod = 0
+"map <leader>zz :call ToggleFold()<cr>
+"fun! ToggleFold()
+"    if g:FoldMethod == 0
+"        exe "normal! zM"
+"        let g:FoldMethod = 1
+"    else
+"        exe "normal! zR"
+"        let g:FoldMethod = 0
+"    endif
+"endfun
 
 " encoding
 set encoding=utf-8
