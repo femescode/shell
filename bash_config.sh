@@ -19,6 +19,7 @@ if cmd_exists "sudo"; then
 else
     cp .profile_rc.sh /etc/
 fi
+source ~/.bashrc
 
 curl -s -LO https://gitee.com/fmer/shell/raw/master/.vimrc
 cp .vimrc ~/.vimrc
