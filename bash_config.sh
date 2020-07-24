@@ -9,7 +9,7 @@ cmd_exists() {
 }
 
 url=https://gitee.com/fmer/shell/raw/master
-if [[ -z $1 ]];then
+if [[ $1 ]];then
     url=$1
 fi
 
