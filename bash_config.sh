@@ -8,19 +8,24 @@ cmd_exists() {
     fi
 }
 
+url=https://gitee.com/fmer/shell/raw/master
+if [[ -z $1 ]];then
+    url=$1
+fi
+
 mkdir -p /tmp/shell-config
 cd /tmp/shell-config
-curl -s -LO https://gitee.com/fmer/shell/raw/master/.profile_rc.sh
+curl -s -LO $url/profile_rc.sh
 if [[ ! $(grep profile_rc ~/.bashrc) ]]; then
     printf "if [ -f /etc/.profile_rc.sh ]; then\n\t. /etc/.profile_rc.sh\nfi" >> ~/.bashrc
 fi
 if cmd_exists "sudo"; then
-    sudo cp .profile_rc.sh /etc/
+    sudo cp profile_rc.sh /etc/.profile_rc.sh
 else
-    cp .profile_rc.sh /etc/
+    cp profile_rc.sh /etc/.profile_rc.sh
 fi
 
-curl -s -LO https://gitee.com/fmer/shell/raw/master/.vimrc
-cp .vimrc ~/.vimrc
+curl -s -LO $url/vimrc
+cp vimrc ~/.vimrc
 rm -rf /tmp/shell-config
 exit 0
