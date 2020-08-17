@@ -1,0 +1,80 @@
+#! /bin/bash
+
+cmd_exists() {
+    if [ -x "$(command -v "$1")" ]; then
+        return 0;
+    else
+       return 1;
+    fi
+}
+
+print_success() {
+    # Print output in green
+    printf "\e[0;32m  [✔] $1\e[0m\n"
+}
+print_error() {
+    # Print output in red
+    printf "\e[0;31m  [✖] $1 $2\e[0m\n"
+}
+
+print_error_exit() {
+    print_error "$@"
+    exit 1
+}
+execute() {
+    $1 
+    if [[ $? -eq 0 ]];then
+        print_success "${2:-$1}"
+    else
+	    print_error_exit "${2:-$1}"
+	fi
+}
+
+url=https://gitee.com/fmer/shell/raw/master
+if [[ $1 ]];then
+    url=$1
+fi
+
+if [[ ! -e "/tmp/rpm_temp" ]]; then
+    mkdir -p "/tmp/rpm_temp"
+fi
+cd /tmp/rpm_temp
+
+if ! cmd_exists "nc"; then
+    execute "curl -s -LO $url/yum/nc/libpcap-1.5.3-8.el7.x86_64.rpm" "下载libpcap-1.5.3-8.el7.x86_64.rpm"
+    execute "rpm -i libpcap-1.5.3-8.el7.x86_64.rpm" "安装libpcap-1.5.3-8.el7.x86_64.rpm"
+    execute "curl -s -LO $url/yum/nc/nmap-ncat-6.40-7.el7.x86_64.rpm" "下载nmap-ncat-6.40-7.el7.x86_64.rpm"
+    execute "rpm -i nmap-ncat-6.40-7.el7.x86_64.rpm" "安装nmap-ncat-6.40-7.el7.x86_64.rpm"
+fi
+
+if ! cmd_exists "pv"; then
+    execute "curl -s -LO $url/yum/pv/pv-1.4.6-1.el7.x86_64.rpm" "下载pv-1.4.6-1.el7.x86_64.rpm"
+    execute "rpm -i pv-1.4.6-1.el7.x86_64.rpm" "安装pv-1.4.6-1.el7.x86_64.rpm"
+fi
+
+if ! cmd_exists "lsof"; then
+    execute "curl -s -LO $url/yum/lsof/lsof-4.87-6.el7.x86_64.rpm" "下载lsof-4.87-6.el7.x86_64.rpm"
+    execute "rpm -i lsof-4.87-6.el7.x86_64.rpm" "安装lsof-4.87-6.el7.x86_64.rpm"
+fi
+
+if ! cmd_exists "ss"; then
+    execute "curl -s -LO $url/yum/ss/libmnl-1.0.3-7.el7.x86_64.rpm" "下载libmnl-1.0.3-7.el7.x86_64.rpm"
+    execute "rpm -i libmnl-1.0.3-7.el7.x86_64.rpm" "安装libmnl-1.0.3-7.el7.x86_64.rpm"
+    execute "curl -s -LO $url/yum/ss/libnfnetlink-1.0.1-4.el7.x86_64.rpm" "下载libnfnetlink-1.0.1-4.el7.x86_64.rpm"
+    execute "rpm -i libnfnetlink-1.0.1-4.el7.x86_64.rpm" "安装libnfnetlink-1.0.1-4.el7.x86_64.rpm"
+    execute "curl -s -LO $url/yum/ss/libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm" "下载libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm"
+    execute "rpm -i libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm" "安装libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm"
+    execute "curl -s -LO $url/yum/ss/iptables-1.4.21-17.el7.x86_64.rpm" "下载iptables-1.4.21-17.el7.x86_64.rpm"
+    execute "rpm -i iptables-1.4.21-17.el7.x86_64.rpm" "安装iptables-1.4.21-17.el7.x86_64.rpm"
+    execute "curl -s -LO $url/yum/ss/iproute-3.10.0-74.el7.x86_64.rpm" "下载iproute-3.10.0-74.el7.x86_64.rpm"
+    execute "rpm -i iproute-3.10.0-74.el7.x86_64.rpm" "安装iproute-3.10.0-74.el7.x86_64.rpm"
+fi
+
+if ! cmd_exists "socat"; then
+    execute "curl -s -LO $url/yum/socat/socat-1.7.2.2-5.el7.x86_64.rpm" "下载socat-1.7.2.2-5.el7.x86_64.rpm"
+    execute "rpm -i socat-1.7.2.2-5.el7.x86_64.rpm" "安装socat-1.7.2.2-5.el7.x86_64.rpm"
+fi
+
+print_success "成功！"
+
+exit 0
