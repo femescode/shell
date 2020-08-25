@@ -71,19 +71,22 @@ urlencode() {
     done
 }
 
-ogrep(){
+ogrep ()
+{
     while read line; do
-        i=0
-        for reg in "$@"; do
-            ostr=$(grep <<< $line -oP $reg)
-            if [[ $ostr ]]; then
-                printf "%s\t" "$ostr"
-                i=$(($i+1))
-            fi
-        done
-        [[ $i > 0 ]] && echo
+        i=0;
+        for reg in "$@";
+        do
+            ostr=$(grep <<< "$line" -oP "$reg");
+            if [[ -n "$ostr" ]]; then
+                printf "%s\t" "$ostr";
+                i=$(($i+1));
+            fi;
+        done;
+        [[ $i > 0 ]] && echo;
     done
 }
+
 underline2Camelcase(){
     pat='\w+(_\w+)+'
     sb=""
