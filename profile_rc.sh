@@ -73,18 +73,8 @@ urlencode() {
 
 ogrep ()
 {
-    while read line; do
-        i=0;
-        for reg in "$@";
-        do
-            ostr=$(grep <<< "$line" -oP "$reg");
-            if [[ -n "$ostr" ]]; then
-                printf "%s\t" "$ostr";
-                i=$(($i+1));
-            fi;
-        done;
-        [[ $i > 0 ]] && echo;
-    done
+    p=$(printf '%s\n' "$@"|paste -s -d'|')
+    grep -onP "$p"|awk '{i=index($0,":");a=substr($0,0,i-1);b=substr($0,i+1);r[a]=r[a] b "\t";} END{for(j in r){print r[j]}}'
 }
 
 underline2Camelcase(){
