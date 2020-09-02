@@ -52,7 +52,7 @@ dosbash(){
 }
 
 
-escape(){
+odcat(){
     if [[ $1 ]];then
         cat $1|od -An -t a|tr -d "\n"|sed 's/nl/nl\n/g'
     else
@@ -98,5 +98,17 @@ underline2Camelcase(){
         sb="$sb${line:$pre_end}"$'\n'
     done
     echo -n "$sb"
+}
+
+mysql2csv(){
+    grep -P '^(\+\-|\|\s)' |sed '/^\+\-/d'|sed -E 's/^\s*\|[ \t]*//g'|sed -E 's/\s*\|[ \t]*$//g'|sed -E 's/[ \t]*\|[ \t]*/,/g'
+}
+
+x5decode(){
+    base64 -d|jq '.body|fromjson'
+}
+
+opm2csv(){
+    iconv -f gbk -t utf8|sed -E 's/"=""([0-9]+)"""/"\1"/g'|sed -E 's/\\/\\\\/g'|sed -E 's/”/\\"/g'|sed -E 's/，/,/g'|sed -E 's/,(\$\{.+\}),/,\"\1\",/g'
 }
 
