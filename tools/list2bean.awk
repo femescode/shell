@@ -1,4 +1,4 @@
-#!/usr/bin/awk
+#!/usr/bin/awk -f
 {
 	typ=$2;
 	rep="0";
