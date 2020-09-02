@@ -35,10 +35,30 @@ if [[ $1 ]];then
     url=$1
 fi
 
-if [[ ! -e "/tmp/rpm_temp" ]]; then
-    mkdir -p "/tmp/rpm_temp"
+if [[ ! -e "/tmp/command_init" ]]; then
+    mkdir -p "/tmp/command_init"
 fi
-cd /tmp/rpm_temp
+cd /tmp/command_init
+
+if ! cmd_exists "jthreadtop"; then
+    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+    sudo ln -s -T /tmp/command_init/jthreadtop.sh /usr/bin/jthreadtop
+    sudo chmod +x /usr/bin/jthreadtop
+fi
+if ! cmd_exists "x5url"; then
+    execute "curl -s -LO $url/yum/shell/tools/x5url.py" "下载x5url.py"
+    sudo ln -s -T /tmp/command_init/x5url.py /usr/bin/x5url
+    sudo chmod +x /usr/bin/x5url
+fi
+if ! cmd_exists "jthreadtop"; then
+    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+fi
+if ! cmd_exists "jthreadtop"; then
+    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+fi
+if ! cmd_exists "jthreadtop"; then
+    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+fi
 
 if ! cmd_exists "nc"; then
     execute "curl -s -LO $url/yum/nc/libpcap-1.5.3-8.el7.x86_64.rpm" "下载libpcap-1.5.3-8.el7.x86_64.rpm"
