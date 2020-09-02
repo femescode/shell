@@ -40,26 +40,39 @@ if [[ ! -e "/tmp/command_init" ]]; then
 fi
 cd /tmp/command_init
 
+#自定义命令
 if ! cmd_exists "jthreadtop"; then
     execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
     sudo ln -s -T /tmp/command_init/jthreadtop.sh /usr/bin/jthreadtop
     sudo chmod +x /usr/bin/jthreadtop
 fi
-if ! cmd_exists "x5url"; then
-    execute "curl -s -LO $url/yum/shell/tools/x5url.py" "下载x5url.py"
-    sudo ln -s -T /tmp/command_init/x5url.py /usr/bin/x5url
-    sudo chmod +x /usr/bin/x5url
+if ! cmd_exists "humantime"; then
+    execute "curl -s -LO $url/yum/shell/tools/humantime.py" "下载humantime.py"
+    sudo ln -s -T /tmp/command_init/humantime.py /usr/bin/humantime
+    sudo chmod +x /usr/bin/humantime
 fi
-if ! cmd_exists "jthreadtop"; then
-    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+if ! cmd_exists "json2csv"; then
+    execute "curl -s -LO $url/yum/shell/tools/json2csv.py" "下载json2csv.py"
+    sudo ln -s -T /tmp/command_init/json2csv.py /usr/bin/json2csv
+    sudo chmod +x /usr/bin/json2csv
 fi
-if ! cmd_exists "jthreadtop"; then
-    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+if ! cmd_exists "socatscript"; then
+    execute "curl -s -LO $url/yum/shell/tools/socatscript.sh" "下载socatscript.sh"
+    sudo ln -s -T /tmp/command_init/socatscript.sh /usr/bin/socatscript
+    sudo chmod +x /usr/bin/socatscript
 fi
-if ! cmd_exists "jthreadtop"; then
-    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+if ! cmd_exists "list2proto"; then
+    execute "curl -s -LO $url/yum/shell/tools/list2proto.awk" "下载list2proto.awk"
+    sudo ln -s -T /tmp/command_init/list2proto.awk /usr/bin/list2proto
+    sudo chmod +x /usr/bin/list2proto
+fi
+if ! cmd_exists "list2bean"; then
+    execute "curl -s -LO $url/yum/shell/tools/list2bean.awk" "下载list2bean.awk"
+    sudo ln -s -T /tmp/command_init/list2bean.awk /usr/bin/list2bean
+    sudo chmod +x /usr/bin/list2bean
 fi
 
+#安装命令
 if ! cmd_exists "nc"; then
     execute "curl -s -LO $url/yum/nc/libpcap-1.5.3-8.el7.x86_64.rpm" "下载libpcap-1.5.3-8.el7.x86_64.rpm"
     execute "rpm -i libpcap-1.5.3-8.el7.x86_64.rpm" "安装libpcap-1.5.3-8.el7.x86_64.rpm"
