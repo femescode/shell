@@ -42,32 +42,32 @@ cd /tmp/command_init
 
 #自定义命令
 if ! cmd_exists "jthreadtop"; then
-    execute "curl -s -LO $url/yum/shell/tools/jthreadtop.sh" "下载jthreadtop.sh"
+    execute "curl -s -LO $url/tools/jthreadtop.sh" "下载jthreadtop.sh"
     sudo ln -s -T /tmp/command_init/jthreadtop.sh /usr/bin/jthreadtop
     sudo chmod +x /usr/bin/jthreadtop
 fi
 if ! cmd_exists "humantime"; then
-    execute "curl -s -LO $url/yum/shell/tools/humantime.py" "下载humantime.py"
+    execute "curl -s -LO $url/tools/humantime.py" "下载humantime.py"
     sudo ln -s -T /tmp/command_init/humantime.py /usr/bin/humantime
     sudo chmod +x /usr/bin/humantime
 fi
 if ! cmd_exists "json2csv"; then
-    execute "curl -s -LO $url/yum/shell/tools/json2csv.py" "下载json2csv.py"
+    execute "curl -s -LO $url/tools/json2csv.py" "下载json2csv.py"
     sudo ln -s -T /tmp/command_init/json2csv.py /usr/bin/json2csv
     sudo chmod +x /usr/bin/json2csv
 fi
 if ! cmd_exists "socatscript"; then
-    execute "curl -s -LO $url/yum/shell/tools/socatscript.sh" "下载socatscript.sh"
+    execute "curl -s -LO $url/tools/socatscript.sh" "下载socatscript.sh"
     sudo ln -s -T /tmp/command_init/socatscript.sh /usr/bin/socatscript
     sudo chmod +x /usr/bin/socatscript
 fi
 if ! cmd_exists "list2proto"; then
-    execute "curl -s -LO $url/yum/shell/tools/list2proto.awk" "下载list2proto.awk"
+    execute "curl -s -LO $url/tools/list2proto.awk" "下载list2proto.awk"
     sudo ln -s -T /tmp/command_init/list2proto.awk /usr/bin/list2proto
     sudo chmod +x /usr/bin/list2proto
 fi
 if ! cmd_exists "list2bean"; then
-    execute "curl -s -LO $url/yum/shell/tools/list2bean.awk" "下载list2bean.awk"
+    execute "curl -s -LO $url/tools/list2bean.awk" "下载list2bean.awk"
     sudo ln -s -T /tmp/command_init/list2bean.awk /usr/bin/list2bean
     sudo chmod +x /usr/bin/list2bean
 fi
