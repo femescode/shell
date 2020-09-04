@@ -14,9 +14,10 @@ fi
 tmux split-window -h -t 0 "socat file:\`tty\`,raw,echo=0 UNIX-LISTEN:${SOCKF},umask=0077"
 tmux select-pane -t 0
 tmux select-layout -t $WINDOW_NAME main-horizontal
-tmux resize-pane -t 0 -y 1
+tmux resize-pane -t 0 -y 2
 # Wait for socket
 while test ! -e ${SOCKF} ; do sleep 1 ; done
+while ! $(ncat -z localhost 9998) ;do sleep 1; done;
 # Use socat to ship data between the unix socket and STDIO.
 socat -U STDOUT TCP:localhost:9998 &
 exec socat STDIO UNIX-CONNECT:${SOCKF}
