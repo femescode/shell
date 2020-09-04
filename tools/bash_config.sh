@@ -15,7 +15,7 @@ fi
 
 mkdir -p /tmp/shell-config
 cd /tmp/shell-config
-curl -s -LO $url/profile_rc.sh
+curl -s -LO $url/tools/profile_rc.sh
 if [[ ! $(grep profile_rc ~/.bashrc) ]]; then
     printf "if [ -f /etc/.profile_rc.sh ]; then\n\t. /etc/.profile_rc.sh\nfi" >> ~/.bashrc
 fi
@@ -25,7 +25,7 @@ else
     cp profile_rc.sh /etc/.profile_rc.sh
 fi
 
-curl -s -LO $url/vimrc
+curl -s -LO $url/tools/vimrc
 cp vimrc ~/.vimrc
 rm -rf /tmp/shell-config
 exit 0
