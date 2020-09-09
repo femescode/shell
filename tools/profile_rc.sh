@@ -77,6 +77,36 @@ ogrep ()
     grep -onP "$p"|awk '{i=index($0,":");a=substr($0,0,i-1);b=substr($0,i+1);r[a]=r[a] b "\t";} END{for(j in r){print r[j]}}'
 }
 
+xread(){
+    while true ; do
+        case "$1" in
+                -n*|--max-args) 
+                    if [[ "$1" == "-n" || "$1" == "--max-args" ]];then 
+                        MAX_ARGS="-n $2";shift 2; 
+                    else 
+                        MAX_ARGS="$1";shift 1; 
+                    fi ;;
+                -P*|--max-procs) 
+                    if [[ "$1" == "-P" || "$1" == "--max-procs" ]];then 
+                        MAX_PROCS="-P $2";shift 2; 
+                    else 
+                        MAX_PROCS="$1";shift 1; 
+                    fi ;;
+                -L*|--max-lines) 
+                    if [[ "$1" == "-L" || "$1" == "--max-lines" ]];then 
+                        MAX_LINES="-L $2";shift 2; 
+                    else 
+                        MAX_LINES="$1";shift 1; 
+                    fi ;;
+                -p|--interactive) 
+                    INTERACTIVE="$1";shift 1 ;;
+                *) break ;;
+        esac
+    done
+    xargs -d"\n" $MAX_ARGS $MAX_PROCS $MAX_LINES $INTERACTIVE bash -c "printf '%s\n' \"\$@\"|$*" ''
+    return 0
+}
+
 underline2Camelcase(){
     pat='\w+(_\w+)+'
     sb=""
