@@ -79,18 +79,26 @@ if ! cmd_exists "list2bean"; then
     $(getsudo) chmod +x /usr/bin/list2bean
 fi
 
+has_rpm(){
+    [[ $(rpm -qa|grep "$1") ]] && return 0 || return 1
+}
+
 #安装命令
 install_redhat(){
     if ! cmd_exists "nc"; then
-        execute "curl -s -LO $url/yum/nc/libpcap-1.5.3-8.el7.x86_64.rpm" "下载libpcap-1.5.3-8.el7.x86_64.rpm"
-        execute "rpm -i libpcap-1.5.3-8.el7.x86_64.rpm" "安装libpcap-1.5.3-8.el7.x86_64.rpm"
-        execute "curl -s -LO $url/yum/nc/nmap-ncat-6.40-7.el7.x86_64.rpm" "下载nmap-ncat-6.40-7.el7.x86_64.rpm"
-        execute "rpm -i nmap-ncat-6.40-7.el7.x86_64.rpm" "安装nmap-ncat-6.40-7.el7.x86_64.rpm"
+        if ! has_rpm "libpcap"; then
+            execute "curl -s -LO $url/yum/nc/libpcap-1.5.3-8.el7.x86_64.rpm" "下载libpcap-1.5.3-8.el7.x86_64.rpm"
+            execute "rpm -i libpcap-1.5.3-8.el7.x86_64.rpm" "安装libpcap-1.5.3-8.el7.x86_64.rpm"
+        fi
+        if ! has_rpm "nmap-ncat"; then
+            execute "curl -s -LO $url/yum/nc/nmap-ncat-6.40-7.el7.x86_64.rpm" "下载nmap-ncat-6.40-7.el7.x86_64.rpm"
+            execute "rpm -i nmap-ncat-6.40-7.el7.x86_64.rpm" "安装nmap-ncat-6.40-7.el7.x86_64.rpm"
+        fi
     fi
 
     if ! cmd_exists "pv"; then
         execute "curl -s -LO $url/yum/pv/pv-1.4.6-1.el7.x86_64.rpm" "下载pv-1.4.6-1.el7.x86_64.rpm"
-        execute "rpm --nofiledigest -i pv-1.4.6-1.el7.x86_64.rpm" "安装pv-1.4.6-1.el7.x86_64.rpm"
+        execute "rpm --nosignature -i pv-1.4.6-1.el7.x86_64.rpm" "安装pv-1.4.6-1.el7.x86_64.rpm"
     fi
 
     if ! cmd_exists "lsof"; then
@@ -99,16 +107,26 @@ install_redhat(){
     fi
 
     if ! cmd_exists "ss"; then
-        execute "curl -s -LO $url/yum/ss/libmnl-1.0.3-7.el7.x86_64.rpm" "下载libmnl-1.0.3-7.el7.x86_64.rpm"
-        execute "rpm -i libmnl-1.0.3-7.el7.x86_64.rpm" "安装libmnl-1.0.3-7.el7.x86_64.rpm"
-        execute "curl -s -LO $url/yum/ss/libnfnetlink-1.0.1-4.el7.x86_64.rpm" "下载libnfnetlink-1.0.1-4.el7.x86_64.rpm"
-        execute "rpm -i libnfnetlink-1.0.1-4.el7.x86_64.rpm" "安装libnfnetlink-1.0.1-4.el7.x86_64.rpm"
-        execute "curl -s -LO $url/yum/ss/libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm" "下载libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm"
-        execute "rpm -i libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm" "安装libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm"
-        execute "curl -s -LO $url/yum/ss/iptables-1.4.21-17.el7.x86_64.rpm" "下载iptables-1.4.21-17.el7.x86_64.rpm"
-        execute "rpm -i iptables-1.4.21-17.el7.x86_64.rpm" "安装iptables-1.4.21-17.el7.x86_64.rpm"
-        execute "curl -s -LO $url/yum/ss/iproute-3.10.0-74.el7.x86_64.rpm" "下载iproute-3.10.0-74.el7.x86_64.rpm"
-        execute "rpm -i iproute-3.10.0-74.el7.x86_64.rpm" "安装iproute-3.10.0-74.el7.x86_64.rpm"
+        if ! has_rpm "libmnl"; then
+            execute "curl -s -LO $url/yum/ss/libmnl-1.0.3-7.el7.x86_64.rpm" "下载libmnl-1.0.3-7.el7.x86_64.rpm"
+            execute "rpm -i libmnl-1.0.3-7.el7.x86_64.rpm" "安装libmnl-1.0.3-7.el7.x86_64.rpm"
+        fi
+        if ! has_rpm "libnfnetlink"; then
+            execute "curl -s -LO $url/yum/ss/libnfnetlink-1.0.1-4.el7.x86_64.rpm" "下载libnfnetlink-1.0.1-4.el7.x86_64.rpm"
+            execute "rpm -i libnfnetlink-1.0.1-4.el7.x86_64.rpm" "安装libnfnetlink-1.0.1-4.el7.x86_64.rpm"
+        fi
+        if ! has_rpm "libnetfilter_conntrack"; then
+            execute "curl -s -LO $url/yum/ss/libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm" "下载libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm"
+            execute "rpm -i libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm" "安装libnetfilter_conntrack-1.0.4-2.el7.x86_64.rpm"
+        fi
+        if ! has_rpm "iptables"; then
+            execute "curl -s -LO $url/yum/ss/iptables-1.4.21-17.el7.x86_64.rpm" "下载iptables-1.4.21-17.el7.x86_64.rpm"
+            execute "rpm -i iptables-1.4.21-17.el7.x86_64.rpm" "安装iptables-1.4.21-17.el7.x86_64.rpm"
+        fi
+        if ! has_rpm "iproute"; then
+            execute "curl -s -LO $url/yum/ss/iproute-3.10.0-74.el7.x86_64.rpm" "下载iproute-3.10.0-74.el7.x86_64.rpm"
+            execute "rpm -i iproute-3.10.0-74.el7.x86_64.rpm" "安装iproute-3.10.0-74.el7.x86_64.rpm"
+        fi
     fi
 
     if ! cmd_exists "socat"; then
