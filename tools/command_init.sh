@@ -90,7 +90,7 @@ install_redhat(){
 
     if ! cmd_exists "pv"; then
         execute "curl -s -LO $url/yum/pv/pv-1.4.6-1.el7.x86_64.rpm" "下载pv-1.4.6-1.el7.x86_64.rpm"
-        execute "rpm -i pv-1.4.6-1.el7.x86_64.rpm" "安装pv-1.4.6-1.el7.x86_64.rpm"
+        execute "rpm --nofiledigest -i pv-1.4.6-1.el7.x86_64.rpm" "安装pv-1.4.6-1.el7.x86_64.rpm"
     fi
 
     if ! cmd_exists "lsof"; then
