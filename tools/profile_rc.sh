@@ -12,6 +12,8 @@ PS1="\[\e]0;\w\a\]\n\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]\$(gi
 #修改ll时间格式
 export TIME_STYLE='+%Y-%m-%d %H:%M:%S'
 alias ll='ls -lh'
+alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'
+alias urldecode='python -c "import sys, urllib as ul; print ul.unquote_plus(sys.argv[1])"'
 
 epochformat(){
     if [[ $# > 0 ]];then
@@ -60,16 +62,6 @@ odcat(){
     fi
 }
 
-urlencode() {
-    local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
-        local c="${1:i:1}"
-        case $c in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf "$c"|xxd -p -c1|xargs printf "%%%s"
-        esac
-    done
-}
 
 ogrep ()
 {
@@ -136,9 +128,5 @@ mysql2csv(){
 
 x5decode(){
     base64 -d|jq '.body|fromjson'
-}
-
-opm2csv(){
-    iconv -f gbk -t utf8|sed -E 's/"=""([0-9]+)"""/"\1"/g'|sed -E 's/\\/\\\\/g'|sed -E 's/”/\\"/g'|sed -E 's/，/,/g'|sed -E 's/,(\$\{.+\}),/,\"\1\",/g'
 }
 
