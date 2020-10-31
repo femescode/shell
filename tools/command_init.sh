@@ -123,6 +123,7 @@ if [[ -f /etc/redhat-release ]];then
     install_redhat
 else
     install_ubuntu
+fi
 
 print_success "成功！"
 
