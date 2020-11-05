@@ -7,7 +7,7 @@ function git-branch-prompt {
   local branch=`git-branch-name`
   if [ $branch ]; then printf " [%s]" $branch; fi
 }
-PS1="\[\e]0;\w\a\]\n\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]\$(git-branch-prompt)\[\033[0m\] \n\$ "
+PS1="\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]$(git-branch-prompt)\[\033[0m\] \n\$ "
 
 #修改ll时间格式
 export TIME_STYLE='+%Y-%m-%d %H:%M:%S'
