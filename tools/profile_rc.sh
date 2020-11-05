@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 
-function git-branch-name {
+git-branch-name() {
   git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3-
 }
-function git-branch-prompt {
+git-branch-prompt() {
   local branch=`git-branch-name`
   if [ $branch ]; then printf " [%s]" $branch; fi
 }
-PS1="\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]$(git-branch-prompt)\[\033[0m\] \n\$ "
+is_git_bash() {
+    cur_uname=$(uname -a)
+    if [[ $cur_uname =~ 'MINGW' ]]; then
+        return 0
+    fi
+    return 1
+}
+if ! is_git_bash; then
+    PS1="\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]$(git-branch-prompt)\[\033[0m\] \n\$ "
+fi
 
 #修改ll时间格式
 export TIME_STYLE='+%Y-%m-%d %H:%M:%S'
