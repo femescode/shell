@@ -53,30 +53,15 @@ if ! cmd_exists "jthreadtop"; then
     $(getsudo) ln -s -T /tmp/command_init/jthreadtop.sh /usr/bin/jthreadtop
     $(getsudo) chmod +x /usr/bin/jthreadtop
 fi
-if ! cmd_exists "humantime"; then
-    execute "curl -s -LO $url/tools/humantime.py" "下载humantime.py"
-    $(getsudo) ln -s -T /tmp/command_init/humantime.py /usr/bin/humantime
-    $(getsudo) chmod +x /usr/bin/humantime
-fi
-if ! cmd_exists "json2csv"; then
-    execute "curl -s -LO $url/tools/json2csv.py" "下载json2csv.py"
-    $(getsudo) ln -s -T /tmp/command_init/json2csv.py /usr/bin/json2csv
-    $(getsudo) chmod +x /usr/bin/json2csv
+if ! cmd_exists "jthreadstate"; then
+    execute "curl -s -LO $url/tools/jthreadstate.awk" "下载jthreadstate.awk"
+    $(getsudo) ln -s -T /tmp/command_init/jthreadstate.awk /usr/bin/jthreadstate
+    $(getsudo) chmod +x /usr/bin/jthreadstate
 fi
 if ! cmd_exists "socatscript"; then
     execute "curl -s -LO $url/tools/socatscript.sh" "下载socatscript.sh"
     $(getsudo) ln -s -T /tmp/command_init/socatscript.sh /usr/bin/socatscript
     $(getsudo) chmod +x /usr/bin/socatscript
-fi
-if ! cmd_exists "list2proto"; then
-    execute "curl -s -LO $url/tools/list2proto.awk" "下载list2proto.awk"
-    $(getsudo) ln -s -T /tmp/command_init/list2proto.awk /usr/bin/list2proto
-    $(getsudo) chmod +x /usr/bin/list2proto
-fi
-if ! cmd_exists "list2bean"; then
-    execute "curl -s -LO $url/tools/list2bean.awk" "下载list2bean.awk"
-    $(getsudo) ln -s -T /tmp/command_init/list2bean.awk /usr/bin/list2bean
-    $(getsudo) chmod +x /usr/bin/list2bean
 fi
 
 has_rpm(){
