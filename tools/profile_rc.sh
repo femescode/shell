@@ -75,7 +75,7 @@ odcat(){
 ogrep ()
 {
     p=$(printf '%s\n' "$@"|paste -s -d'|')
-    grep -onP "$p"|awk '{i=index($0,":");a=substr($0,0,i-1);b=substr($0,i+1);r[a]=r[a] b "\t";} END{for(j in r){print r[j]}}'
+    grep -onP "$p"|awk -F: '{if(!S[$1]++){if(NR>1){printf "\n"} printf "%s:%s",$1,$2}else {printf ",%s",$2}}'
 }
 
 xread(){
@@ -129,13 +129,5 @@ underline2Camelcase(){
         sb="$sb${line:$pre_end}"$'\n'
     done
     echo -n "$sb"
-}
-
-mysql2csv(){
-    grep -P '^(\+\-|\|\s)' |sed '/^\+\-/d'|sed -E 's/^\s*\|[ \t]*//g'|sed -E 's/\s*\|[ \t]*$//g'|sed -E 's/[ \t]*\|[ \t]*/,/g'
-}
-
-x5decode(){
-    base64 -d|jq '.body|fromjson'
 }
 
