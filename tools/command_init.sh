@@ -45,7 +45,7 @@ if [[ $1 ]];then
     url=$1
 fi
 
-dir='~/.command_init'
+dir="$HOME/.command_init"
 if [[ ! -e "$dir" ]]; then
     mkdir -p "$dir"
 fi
