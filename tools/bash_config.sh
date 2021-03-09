@@ -13,7 +13,7 @@ if [[ $1 ]];then
     url=$1
 fi
 
-dir='~/tmp/.shell-config'
+dir="$HOME/.shell-config"
 mkdir -p $dir && cd $dir
 
 curl -s -LO $url/tools/.profile_rc.sh
