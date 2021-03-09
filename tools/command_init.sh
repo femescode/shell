@@ -54,16 +54,19 @@ cd "$dir"
 #自定义命令
 if ! cmd_exists "jthreadtop"; then
     execute "curl -s -LO $url/tools/jthreadtop.sh" "下载jthreadtop.sh"
+    [[ -e /usr/bin/jthreadtop ]] && $(getsudo) rm -f /usr/bin/jthreadtop
     $(getsudo) ln -s -T "$dir"/jthreadtop.sh /usr/bin/jthreadtop
     $(getsudo) chmod +x /usr/bin/jthreadtop
 fi
 if ! cmd_exists "jthreadstate"; then
     execute "curl -s -LO $url/tools/jthreadstate.awk" "下载jthreadstate.awk"
+    [[ -e /usr/bin/jthreadstate ]] && $(getsudo) rm -f /usr/bin/jthreadstate
     $(getsudo) ln -s -T "$dir"/jthreadstate.awk /usr/bin/jthreadstate
     $(getsudo) chmod +x /usr/bin/jthreadstate
 fi
 if ! cmd_exists "socatscript"; then
     execute "curl -s -LO $url/tools/socatscript.sh" "下载socatscript.sh"
+    [[ -e /usr/bin/socatscript ]] && $(getsudo) rm -f /usr/bin/socatscript
     $(getsudo) ln -s -T "$dir"/socatscript.sh /usr/bin/socatscript
     $(getsudo) chmod +x /usr/bin/socatscript
 fi
