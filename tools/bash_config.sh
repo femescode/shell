@@ -13,7 +13,8 @@ if [[ $1 ]];then
     url=$1
 fi
 
-mkdir -p ./tmp/shell-config && cd ./tmp/shell-config
+dir='~/tmp/.shell-config'
+mkdir -p $dir && cd $dir
 
 curl -s -LO $url/tools/.profile_rc.sh
 
@@ -30,6 +31,6 @@ fi
 curl -s -LO $url/tools/.vimrc
 cp .vimrc ~/.vimrc
 
-rm -rf /tmp/shell-config
+rm -rf $dir
 
 exit 0
