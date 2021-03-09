@@ -15,7 +15,7 @@ is_git_bash() {
     return 1
 }
 if ! is_git_bash; then
-    PS1="\n\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]$(git-branch-prompt)\[\033[0m\] \n\$ "
+    PS1="\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]$(git-branch-prompt)\[\033[0m\] \n\$ "
 fi
 
 #修改ll时间格式
