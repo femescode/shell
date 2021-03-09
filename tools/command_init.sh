@@ -36,37 +36,37 @@ execute() {
 	    print_error_exit "${2:-$1}"
 	fi
 }
+has_rpm(){
+    [[ $(rpm -qa|grep "$1") ]] && return 0 || return 1
+}
 
 url=https://gitee.com/fmer/shell/raw/master
 if [[ $1 ]];then
     url=$1
 fi
 
-if [[ ! -e "/tmp/command_init" ]]; then
-    mkdir -p "/tmp/command_init"
+dir='~/.command_init'
+if [[ ! -e "$dir" ]]; then
+    mkdir -p "$dir"
 fi
-cd /tmp/command_init
+cd "$dir"
 
 #自定义命令
 if ! cmd_exists "jthreadtop"; then
     execute "curl -s -LO $url/tools/jthreadtop.sh" "下载jthreadtop.sh"
-    $(getsudo) ln -s -T /tmp/command_init/jthreadtop.sh /usr/bin/jthreadtop
+    $(getsudo) ln -s -T "$dir"/jthreadtop.sh /usr/bin/jthreadtop
     $(getsudo) chmod +x /usr/bin/jthreadtop
 fi
 if ! cmd_exists "jthreadstate"; then
     execute "curl -s -LO $url/tools/jthreadstate.awk" "下载jthreadstate.awk"
-    $(getsudo) ln -s -T /tmp/command_init/jthreadstate.awk /usr/bin/jthreadstate
+    $(getsudo) ln -s -T "$dir"/jthreadstate.awk /usr/bin/jthreadstate
     $(getsudo) chmod +x /usr/bin/jthreadstate
 fi
 if ! cmd_exists "socatscript"; then
     execute "curl -s -LO $url/tools/socatscript.sh" "下载socatscript.sh"
-    $(getsudo) ln -s -T /tmp/command_init/socatscript.sh /usr/bin/socatscript
+    $(getsudo) ln -s -T "$dir"/socatscript.sh /usr/bin/socatscript
     $(getsudo) chmod +x /usr/bin/socatscript
 fi
-
-has_rpm(){
-    [[ $(rpm -qa|grep "$1") ]] && return 0 || return 1
-}
 
 #安装命令
 install_redhat(){

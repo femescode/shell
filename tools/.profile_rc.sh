@@ -63,22 +63,13 @@ dosbash(){
 }
 
 
-odcat(){
-    if [[ $1 ]];then
-        cat $1|od -An -t a|tr -d "\n"|sed 's/nl/nl\n/g'
-    else
-        cat|od -An -t a|tr -d "\n"|sed 's/nl/nl\n/g'
-    fi
-}
-
-
 ogrep ()
 {
     p=$(printf '%s\n' "$@"|paste -s -d'|')
     grep -onP "$p"|awk -F: '{if(!S[$1]++){if(NR>1){printf "\n"} printf "%s:%s",$1,$2}else {printf ",%s",$2}}'
 }
 
-xread(){
+xpipe(){
     while true ; do
         case "$1" in
                 -n*|--max-args) 
@@ -107,27 +98,3 @@ xread(){
     xargs -d"\n" $MAX_ARGS $MAX_PROCS $MAX_LINES $INTERACTIVE bash -c "printf '%s\n' \"\$@\"|$*" ''
     return 0
 }
-
-underline2Camelcase(){
-    pat='\w+(_\w+)+'
-    sb=""
-    IFS="\n"
-    while read -r line;do
-        let pre_end=0;
-        while read -r cw;do
-            if [[ ! $cw ]];then
-                continue;
-            fi
-            let cur_idx=$(cut <<<"$cw" -d: -f1)
-            cur_str=$(cut <<<"$cw" -d: -f2-)
-            let cur_len=${#cur_str}
-            pre_str=${line:$pre_end:$(($cur_idx-$pre_end))}
-            replace_str=$(echo -n "$cur_str"|sed 's/_/ /g'|sed 's/\b./\u&/g'|sed 's/ //g'|sed 's/^./\l&/g')
-            sb="$sb$pre_str$replace_str"
-            let pre_end=$(($cur_idx + $cur_len))
-        done <<< $(grep <<<"$line" -b -oP "$pat")
-        sb="$sb${line:$pre_end}"$'\n'
-    done
-    echo -n "$sb"
-}
-
