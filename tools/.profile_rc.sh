@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
 git-branch-name() {
-  git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3-
+    git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3-
 }
 git-branch-prompt() {
-  local branch=`git-branch-name`
-  if [ $branch ]; then printf " [%s]" $branch; fi
+    local branch=`git-branch-name`
+    if [ $branch ]; then printf " [%s]" $branch; fi
+}
+curr_ip() {
+    ifconfig|awk -v RS= '/eth0|ens33|wlan0/ || $6~/^(192|10)\./{print $6}'
 }
 is_git_bash() {
     cur_uname=$(uname -a)
@@ -15,7 +18,7 @@ is_git_bash() {
     return 1
 }
 if ! is_git_bash; then
-    PS1="\n\[\e[01;32m\]\u@\h \[\e[33m\]\w\[\e[0m\] \[\033[0;36m\]$(git-branch-prompt)\[\033[0m\] \n\$ "
+    PS1="\n\[\e[01;32m\]\u@\$(curr_ip):\[\e[33m\]\$PWD\[\e[0m\] \[\033[0;36m\]\$(git-branch-prompt)\[\033[0m\] \n\$ "
 fi
 
 #修改ll时间格式
