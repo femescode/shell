@@ -8,7 +8,7 @@ git-branch-prompt() {
     if [ $branch ]; then printf " [%s]" $branch; fi
 }
 curr_ip() {
-    ifconfig|awk -v RS= '/eth0|ens33|wlan0/ || $6~/^(192|10)\./{print $6}'
+    ifconfig|awk -v RS= '/eth0|ens33|wlan0/ || $6~/^(192|10)\./{print $6}'|head -n1
 }
 is_git_bash() {
     cur_uname=$(uname -a)
