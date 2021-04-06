@@ -13,7 +13,7 @@ if [[ $1 ]];then
     url=$1
 fi
 
-dir="$(mktemp)"
+dir="$(mktemp -d)"
 cd $dir
 
 tmpcmd="curl -s $url/tools/.profile_rc.sh -o /etc/.profile_rc.sh"
