@@ -13,23 +13,22 @@ if [[ $1 ]];then
     url=$1
 fi
 
-dir="$HOME/.shell-config"
-mkdir -p $dir && cd $dir
+dir="$(mktemp)"
+cd $dir
 
-curl -s -LO $url/tools/.profile_rc.sh
+tmpcmd="curl -s $url/tools/.profile_rc.sh -o /etc/.profile_rc.sh"
 
 if cmd_exists "sudo"; then
-    sudo cp .profile_rc.sh /etc/.profile_rc.sh
+    sudo $tmpcmd
 else
-    cp .profile_rc.sh /etc/.profile_rc.sh
+    $tmpcmd
 fi
 
 if [[ ! $(grep profile_rc ~/.bashrc) ]]; then
-    printf "if [ -f /etc/.profile_rc.sh ]; then\n\t. /etc/.profile_rc.sh\nfi" >> ~/.bashrc
+    printf "\nif [ -f /etc/.profile_rc.sh ]; then\n\t. /etc/.profile_rc.sh\nfi" >> ~/.bashrc
 fi
 
-curl -s -LO $url/tools/.vimrc
-cp .vimrc ~/.vimrc
+curl -s $url/tools/.vimrc -o ~/.vimrc 
 
 rm -rf $dir
 
