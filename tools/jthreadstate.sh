@@ -1,5 +1,6 @@
-#!/usr/bin/awk -f
+#!/bin/bash
 
+awk_script='
 /^"/{
     s = $0;
     match(s,/^"([^"]+)"/,m);
@@ -23,3 +24,10 @@
     }
     print name "\t" state;
 }
+'
+
+pid="$1"
+[[ ! "$pid" ]] && { pid=`ps h -o pid --sort=-pmem -C java|head -n1`; }
+[[ ! "$pid" ]] && { echo 'not found java process, usage: $0 pid' >&2; exit 1; }
+
+jstack $pid|tr -d '\n'|sed -E 's/("[^"]+")/\n\1/g'|awk "$awk_script" |sed -E 's/[0-9]+/n/g'|sort|uniq -c|sort -nr|column -t -s$'\t'
