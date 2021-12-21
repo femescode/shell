@@ -58,8 +58,8 @@ if ! cmd_exists "jthreadtop"; then
     $(getsudo) chmod +x /usr/bin/jthreadtop
 fi
 if ! cmd_exists "jthreadstate"; then
-    execute "curl -s -LO $url/tools/jthreadstate.awk" "下载jthreadstate.awk"
-    $(getsudo) ln -s -T -f "$dir"/jthreadstate.awk /usr/bin/jthreadstate
+    execute "curl -s -LO $url/tools/jthreadstate.sh" "下载jthreadstate.sh"
+    $(getsudo) ln -s -T -f "$dir"/jthreadstate.sh /usr/bin/jthreadstate
     $(getsudo) chmod +x /usr/bin/jthreadstate
 fi
 if ! cmd_exists "socatscript"; then
