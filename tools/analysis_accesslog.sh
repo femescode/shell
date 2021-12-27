@@ -34,7 +34,7 @@ extract_fields(){
         split($5, req_arr, /\s+/)
         split(req_arr[2], url_arr, /\?/)
         req_url=url_arr[1]
-        req_cost=$7
+        req_cost=gensub(/[^0-9]+$/, "", "g", $8)
         printf "%s %s %s\n",req_time,req_url,req_cost
     }'
 }
@@ -47,22 +47,27 @@ analysis_data(){
         URL_T[$2,$1]++
     } 
     END{
+        asorti(T,sort_time_arr,"@ind_str_asc")
+        asorti(URL,sort_url_arr,"@val_num_desc")
         # 打印标题行
-        printf "url"
-        for(t in T){
-            printf " %s",t
+        printf "time/url total"
+        for(i in sort_url_arr){
+            printf " %s",sort_url_arr[i]
+            total += URL[sort_url_arr[i]]
         }
         printf "\n"
         # 打印汇总数据
-        printf "total";
-        for(t in T){
-            printf " %s",T[t]
+        printf "total %s",total;
+        for(i in sort_url_arr){
+            printf " %s",URL[sort_url_arr[i]]
         }
         printf "\n"
         # 打印数据
-        for(u in URL){
-            printf u;
-            for(t in T){
+        for(i in sort_time_arr){
+            t=sort_time_arr[i]
+            printf "%s %s",t,T[t];
+            for(j in sort_url_arr){
+                u=sort_url_arr[j]
                 printf " %s",URL_T[u,t]?URL_T[u,t]:0
             }
             printf "\n"
