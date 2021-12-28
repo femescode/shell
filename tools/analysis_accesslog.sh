@@ -50,6 +50,7 @@ analysis_data(){
         asorti(URL,sort_url_arr,"@val_num_desc")
         # 打印标题行
         printf "time/url total"
+        PROCINFO["sorted_in"] = "@ind_num_asc"
         for(i in sort_url_arr){
             printf " %s",sort_url_arr[i]
             total += URL[sort_url_arr[i]]
