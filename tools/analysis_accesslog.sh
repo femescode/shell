@@ -75,4 +75,4 @@ analysis_data(){
     }'
 }
 
-extract_fields "$1" | analysis_data | column -t |tee `mktemp -p . analysis_XXXXXXXXXX.txt`|less -iSFX
+extract_fields "$1" | analysis_data | column -t |tee `mktemp analysis_accesslog_XXXXXXXXXX.txt`|less -iSFX
