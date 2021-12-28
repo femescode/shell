@@ -1,7 +1,7 @@
 #!/bin/bash
 
 extract_fields(){
-    awk -v FPAT='[^"\\\\ \\[\\]]+|"[^"]*"|\\[[^\\]]+\\]' '
+    awk -v mt=${1:-0} '
     function strptime(str,     time_str,arr,Y,M,D,H,m,S){
         time_str = gensub(/[\/:]+/, " ", "g", str)
         split(time_str, arr, " ")
@@ -28,19 +28,18 @@ extract_fields(){
         mon["Dec"] = 12
         return mon[str]
     }
-    {
-        timestamp=strptime(gensub(/[\[\]]+/, "", "g", $4))
+    int($11) >= mt{
+        timestamp=strptime(substr($4,2))
         req_time=strftime("%dT%H:%M", timestamp)
-        split($5, req_arr, /\s+/)
-        split(req_arr[2], url_arr, /\?/)
+        split($7, url_arr, /\?/)
         req_url=url_arr[1]
-        req_cost=gensub(/[^0-9]+$/, "", "g", $8)
+        req_cost=int($11)
         printf "%s %s %s\n",req_time,req_url,req_cost
     }'
 }
 
 analysis_data(){
-    awk -v mt=${1:-0} '
+    awk '
     $3 >= mt {
         T[$1]++; 
         URL[$2]++; 
@@ -75,4 +74,4 @@ analysis_data(){
     }'
 }
 
-extract_fields | analysis_data "$1" | column -t |less -iSFX
+extract_fields "$1" | analysis_data | column -t |tee `mktemp -p . analysis_XXXXXXXXXX.txt`|less -iSFX
