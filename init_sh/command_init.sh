@@ -51,22 +51,6 @@ if [[ ! -e "$dir" ]]; then
 fi
 cd "$dir"
 
-#自定义命令
-if ! cmd_exists "jthreadtop"; then
-    execute "curl -s -LO $url/tools/jthreadtop.sh" "下载jthreadtop.sh"
-    $(getsudo) ln -s -T -f "$dir"/jthreadtop.sh /usr/bin/jthreadtop
-    $(getsudo) chmod +x /usr/bin/jthreadtop
-fi
-if ! cmd_exists "jthreadstate"; then
-    execute "curl -s -LO $url/tools/jthreadstate.sh" "下载jthreadstate.sh"
-    $(getsudo) ln -s -T -f "$dir"/jthreadstate.sh /usr/bin/jthreadstate
-    $(getsudo) chmod +x /usr/bin/jthreadstate
-fi
-if ! cmd_exists "socatscript"; then
-    execute "curl -s -LO $url/tools/socatscript.sh" "下载socatscript.sh"
-    $(getsudo) ln -s -T -f "$dir"/socatscript.sh /usr/bin/socatscript
-    $(getsudo) chmod +x /usr/bin/socatscript
-fi
 
 #安装命令
 install_redhat(){
@@ -120,7 +104,7 @@ install_redhat(){
     fi
 }
 install_ubuntu(){
-    sudo apt install openssh-client lsof nmap psmisc iproute2 pv jq
+    sudo apt install openssh-client lsof nmap psmisc iproute2 pv jq progress moreutils dateutils
 }
 if [[ -f /etc/redhat-release ]];then
     install_redhat
