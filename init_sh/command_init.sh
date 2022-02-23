@@ -54,6 +54,13 @@ cd "$dir"
 
 #安装命令
 install_redhat(){
+    if curl -s -o /dev/null www.baidu.com; then
+        yum install -y jq pv cv openssh-clients lsof bc psmisc iproute tcpdump ngrep nmap-ncat socat
+    else
+        install_redhat_local
+    fi
+}
+install_redhat_local(){
     if ! cmd_exists "nc"; then
         if ! has_rpm "libpcap"; then
             execute "curl -s -LO $url/yum/nc/libpcap-1.5.3-8.el7.x86_64.rpm" "下载libpcap-1.5.3-8.el7.x86_64.rpm"
@@ -104,7 +111,7 @@ install_redhat(){
     fi
 }
 install_ubuntu(){
-    sudo apt install openssh-client lsof nmap psmisc iproute2 pv jq progress moreutils dateutils
+    sudo apt install -y jq pv progress openssh-client lsof bc psmisc iproute2 tcpdump ngrep ncat socat moreutils dateutils
 }
 if [[ -f /etc/redhat-release ]];then
     install_redhat
