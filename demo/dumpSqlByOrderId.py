@@ -5,6 +5,8 @@ import argparse
 import pymysql
 import datetime
 import decimal
+import re
+import binascii
 
 def strval(v):
     return str(v).replace("'","\\'").replace("\n","\\n").replace("\t","\\t")
@@ -17,7 +19,11 @@ def dumpSqlFromRow(row, tableName):
         if v is None:
             continue
         elif isinstance(v, str):
-            values.append("'" + strval(v) + "'")
+            if re.search(r'[\x00-\x08\x0B-\x0C\x0E-\x1F]',v):
+                hexv=binascii.hexlify(v.encode("utf8")).decode("utf8")
+                values.append("unhex('" + strval(hexv) + "')")
+            else:
+                values.append("'" + strval(v) + "'")
         elif isinstance(v, int) or isinstance(v, decimal.Decimal):
             values.append(strval(v))
         elif isinstance(v, datetime.datetime):
