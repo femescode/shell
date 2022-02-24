@@ -11,10 +11,12 @@ import binascii
 def strval(v):
     return str(v).replace("'","\\'").replace("\n","\\n").replace("\t","\\t")
 
-def dumpSqlFromRow(row, tableName):
+def dumpSqlFromRow(row, tableName, ignoreFields=None):
     fields = []
     values = []
     for k in row.keys():
+        if ignoreFields is not None and k in ignoreFields:
+            continue
         v = row.get(k)
         if v is None:
             continue
@@ -41,19 +43,19 @@ def getSqlRows(con, tableName, whereSql):
     rows = cur.fetchall()
     return rows
 
-def dumpSqlFromRows(rows, tableName):
+def dumpSqlFromRows(rows, tableName, ignoreFields=None):
     for row in rows:
-        dumpSqlFromRow(row, tableName)
+        dumpSqlFromRow(row, tableName, ignoreFields)
 
-def dumpSql(con, tableName, whereSql):
+def dumpSql(con, tableName, whereSql, ignoreFields=None):
     results = getSqlRows(con, tableName, whereSql)
-    dumpSqlFromRows(results, tableName)
+    dumpSqlFromRows(results, tableName, ignoreFields)
 
 def exportSqlByWaybillId(con, oid, tid, wid):
-    dumpSql(con, "deliver_item", " where wid=%s" % (wid))
+    dumpSql(con, "deliver_item", " where wid=%s" % (wid), ["id"])
 
 def exportSqlByOrderId(con, oid, tid):
-    dumpSql(con, "order_item", " where oid=%s" % (oid))
+    dumpSql(con, "order_item", " where oid=%s" % (oid), ["id"])
 
     rows = getSqlRows(con, "deliver", " where oid=%s" % (oid))
     for row in rows:
