@@ -55,7 +55,7 @@ cd "$dir"
 #安装命令
 install_redhat(){
     if curl -s -o /dev/null www.baidu.com; then
-        yum install -y jq pv cv openssh-clients lsof bc psmisc iproute tcpdump ngrep nmap-ncat socat
+        yum install -y curl vim jq pv cv openssh-clients lsof bc psmisc iproute tcpdump ngrep nmap-ncat socat
     else
         install_redhat_local
     fi
@@ -111,7 +111,7 @@ install_redhat_local(){
     fi
 }
 install_ubuntu(){
-    sudo apt install -y jq pv progress openssh-client lsof bc psmisc iproute2 tcpdump ngrep ncat socat moreutils dateutils
+    sudo apt install -y curl vim jq pv progress openssh-client lsof bc psmisc iproute2 tcpdump ngrep ncat socat moreutils dateutils python3-q-text-as-data parallel tmux sysstat iotop iftop dstat nmon
 }
 if [[ -f /etc/redhat-release ]];then
     install_redhat
