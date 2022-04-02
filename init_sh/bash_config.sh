@@ -16,7 +16,7 @@ fi
 dir="$(mktemp -d)"
 cd $dir
 
-tmpcmd="curl -s $url/tools/.profile_rc.sh -o /etc/.profile_rc.sh"
+tmpcmd="curl -s $url/init_sh/.profile_rc.sh -o /etc/.profile_rc.sh"
 
 if cmd_exists "sudo"; then
     sudo $tmpcmd
@@ -28,7 +28,7 @@ if [[ ! $(grep profile_rc ~/.bashrc) ]]; then
     printf "\nif [ -f /etc/.profile_rc.sh ]; then\n\t. /etc/.profile_rc.sh\nfi" >> ~/.bashrc
 fi
 
-curl -s $url/tools/.vimrc -o ~/.vimrc 
+curl -s $url/init_sh/.vimrc -o ~/.vimrc 
 
 rm -rf $dir
 
