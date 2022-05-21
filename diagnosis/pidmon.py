@@ -49,7 +49,7 @@ class Process:
         for tid in self._tids:
             try:
                 (runing_ns, waitrun_ns, timeslice_num) = self.read_schedstat_file("/proc/" + str(self._pid) + "/task/" + str(tid) + "/schedstat")
-            except FileNotFoundError as e:
+            except IOError as e:
                 continue
             self._cur_schedstat_map[tid]=[runing_ns, waitrun_ns, timeslice_num]
         # 更新时间
