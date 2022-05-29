@@ -57,40 +57,38 @@ class Process:
 
     def calc_schedstat_delta(self):
         total_schedstat_delta = [0, 0, 0]
-        max_oncpu_delta = 0
-        max_oncpu_delta_tid = 0
-        max_sched_delay = 0
-        max_sched_delay_tid = 0
+        max_oncpu_schedstat_delta = [0, 0, 0, 0]
+        max_sched_delay_schedstat_delta = [0, 0, 0, 0]
         for tid in self._cur_schedstat_map.keys():
             cur_schedstat_arr = self._cur_schedstat_map.get(tid)
             old_schedstat_arr = self._old_schedstat_map.get(tid)
             if old_schedstat_arr is None:
                 continue
-            schedstat_delta = [(cur_schedstat_arr[0] - old_schedstat_arr[0]), (cur_schedstat_arr[1] - old_schedstat_arr[1]), (cur_schedstat_arr[2] - old_schedstat_arr[2])]
+            schedstat_delta = [(cur_schedstat_arr[0] - old_schedstat_arr[0]), (cur_schedstat_arr[1] - old_schedstat_arr[1]), (cur_schedstat_arr[2] - old_schedstat_arr[2]), tid]
             total_schedstat_delta = [(total_schedstat_delta[0]+schedstat_delta[0]), (total_schedstat_delta[1]+schedstat_delta[1]), (total_schedstat_delta[2]+schedstat_delta[2])]
-            if schedstat_delta[0] > max_oncpu_delta:
-                max_oncpu_delta = schedstat_delta[0]
-                max_oncpu_delta_tid = tid
-            if schedstat_delta[1] > max_sched_delay:
-                max_sched_delay = schedstat_delta[1]
-                max_sched_delay_tid = tid
+            if schedstat_delta[0] > max_oncpu_schedstat_delta[0]:
+                max_oncpu_schedstat_delta = schedstat_delta
+            if schedstat_delta[1] > max_sched_delay_schedstat_delta[1]:
+                max_sched_delay_schedstat_delta = schedstat_delta
         self._total_schedstat_delta = total_schedstat_delta
-        self._max_oncpu_delta = max_oncpu_delta
-        self._max_oncpu_delta_tid = max_oncpu_delta_tid
-        self._max_sched_delay = max_sched_delay
-        self._max_sched_delay_tid = max_sched_delay_tid
+        self._max_oncpu_schedstat_delta = max_oncpu_schedstat_delta
+        self._max_sched_delay_schedstat_delta = max_sched_delay_schedstat_delta
+
+    def format_ms(self, ms):
+        return "%-10s" % ("%.3fms" % (ms))
 
     def print_out(self):
         if self._old_time is None:
             return
         total_oncpu_ms = self._total_schedstat_delta[0]/1000000
         total_sched_delay_ms = self._total_schedstat_delta[1]/1000000
-        max_oncpu_ms = self._max_oncpu_delta/1000000
-        max_sched_delay_ms = self._max_sched_delay/1000000
         total_ms = self._cur_time - self._old_time
         sleep_ms = total_ms - total_oncpu_ms - total_sched_delay_ms
-        print("%-20s pid:%s total:%.3fms oncpu:%.3fms(max:%.3fms,tid:%s) sched_delay:%.3fms(max:%.3fms:tid:%s) idle:%.3fms" % (datetime.fromtimestamp(time.time()).strftime("%Y-%m-%dT%H:%M:%S"),
-            str(self._pid), total_ms, total_oncpu_ms, max_oncpu_ms, str(self._max_oncpu_delta_tid), total_sched_delay_ms, max_sched_delay_ms, str(self._max_sched_delay_tid), max(sleep_ms, 0)))
+        curtime = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%dT%H:%M:%S")
+        print("%-20s pid:%s total:%s idle:%s oncpu:( %s max:%s cs:%-3s tid:%-6s ) sched_delay:( %s max:%s cs:%-3s tid:%-6s )" % (
+            curtime, str(self._pid), self.format_ms(total_ms), self.format_ms(max(sleep_ms, 0)), 
+            self.format_ms(total_oncpu_ms), self.format_ms(self._max_oncpu_schedstat_delta[0]/1000000), str(self._max_oncpu_schedstat_delta[2]), str(self._max_oncpu_schedstat_delta[3]), 
+            self.format_ms(total_sched_delay_ms), self.format_ms(self._max_sched_delay_schedstat_delta[1]/1000000), str(self._max_sched_delay_schedstat_delta[2]), str(self._max_sched_delay_schedstat_delta[3])))
 
 def main():
     parser = argparse.ArgumentParser(description='Monitor process latency by /proc.')
