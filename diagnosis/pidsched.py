@@ -85,7 +85,7 @@ class Process:
         total_ms = self._cur_time - self._old_time
         sleep_ms = total_ms - total_oncpu_ms - total_sched_delay_ms
         curtime = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%dT%H:%M:%S")
-        print("%-20s pid:%s total:%s idle:%s oncpu:( %s max:%s cs:%-3s tid:%-6s ) sched_delay:( %s max:%s cs:%-3s tid:%-6s )" % (
+        print("%-20s pid:%s total:%s idle:%s oncpu:( %s max:%s cs:%-4s tid:%-6s ) sched_delay:( %s max:%s cs:%-3s tid:%-6s )" % (
             curtime, str(self._pid), self.format_ms(total_ms), self.format_ms(max(sleep_ms, 0)), 
             self.format_ms(total_oncpu_ms), self.format_ms(self._max_oncpu_schedstat_delta[0]/1000000), str(self._max_oncpu_schedstat_delta[2]), str(self._max_oncpu_schedstat_delta[3]), 
             self.format_ms(total_sched_delay_ms), self.format_ms(self._max_sched_delay_schedstat_delta[1]/1000000), str(self._max_sched_delay_schedstat_delta[2]), str(self._max_sched_delay_schedstat_delta[3])))
