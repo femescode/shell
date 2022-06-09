@@ -2,7 +2,7 @@
 
 active_thread_kstack(){
   # 打印当前系统活跃java线程的内核栈
-  ps h -Lo pid,tid,s,pcpu,comm,wchan:32,min_flt,maj_flt -C java|grep '[RD] '| awk '
+  ps h -Lo pid,tid,s,pcpu,rss,comm,wchan:32,min_flt,maj_flt,lastcpu -C java| awk '
     BEGIN{
         syscall_files["/usr/include/asm/unistd_64.h"]=1;
         syscall_files["/usr/include/x86_64-linux-gnu/asm/unistd_64.h"]=1;
@@ -48,7 +48,16 @@ active_thread_kstack(){
         special_fd_map["2"]="(stderr)";
     }
     {
+        while(getline status_line <("/proc/"$1"/task/"$2"/status") > 0){
+            split(status_line, status_arr, /\s*:\s*/)
+            status_map[status_arr[1]]=status_arr[2]
+        }
+        close("/proc/"$1"/task/"$2"/status");
+        vcs=status_map["voluntary_ctxt_switches"]
+        nvcs=status_map["nonvoluntary_ctxt_switches"]
         RS="^$";
+        getline schedstat <("/proc/"$1"/task/"$2"/schedstat");
+        close("/proc/"$1"/task/"$2"/schedstat");
         getline wchan <("/proc/"$1"/task/"$2"/wchan");
         close("/proc/"$1"/task/"$2"/wchan");
         getline stack <("/proc/"$1"/task/"$2"/stack");
@@ -67,13 +76,18 @@ active_thread_kstack(){
                 filename=filename special_fd_map[syscall_id]
             }
         }
-        printf "pid:%s,tid:%s,stat:%s,pcpu:%s,comm:%s,wchan:%s,min_flt:%s,maj_flt:%s,syscall:%s,filename:%s\n",$1,$2,$3,$4,$5,wchan,$7,$8,syscall_name,filename;
-        print stack;
+        printf "pid:%s,tid:%s,stat:%s,pcpu:%s,rss:%s,comm:%s,wchan:%s,min_flt:%s,maj_flt:%s,lastcpu:%s,vcs:%s,nvcs:%s,schedstat:%s,syscall:%s,filename:%s,kstack:%s\n",$1,$2,$3,$4,$5,$6,wchan,$8,$9,$10,vcs,nvcs,gensub(/[\n]/," ","g",schedstat),syscall_name,gensub(/[:\n]/," ","g",filename),gensub(/\n/,";","g",stack);
         RS="\n"
     }'
 }
 
-echo "active_thread_kstack: $(active_thread_kstack|sed -z 's/\n/   /g'), mem_alloc: $(cat /proc/vmstat|grep -e "pageoutrun" -e "allocstall"|sed -z 's/\n/   /g'), dmesg_100: $(dmesg -T|tail -n100|sed -z 's/\n/   /g')"
-sleep 1
-echo "active_thread_kstack: $(active_thread_kstack|sed -z 's/\n/   /g'), mem_alloc: $(cat /proc/vmstat|grep -e "pageoutrun" -e "allocstall"|sed -z 's/\n/   /g'), dmesg_100: $(dmesg -T|tail -n100|sed -z 's/\n/   /g')"
-
+while read vmstat; do
+    pid=`ps h -o pid --sort=-pmem -C java|head -n1`
+    date +%FT%T
+    echo "vmstat: $vmstat"
+    echo "top:" `top -d 0.5 -b -n2 -p $pid|tac|sed '/top -/q'|tac|sed -z 's/\n/\\n/g'`
+    echo "mem_alloc:" `cat /proc/vmstat|grep -E "pageoutrun|allocstall"`
+    echo "cgroup_cpu_stat:" `cat /sys/fs/cgroup/cpu,cpuacct/cpu.stat`
+    active_thread_kstack
+    echo
+done < <(vmstat 1|stdbuf -o L tail -n+4)
