@@ -1,6 +1,6 @@
 #!/bin/bash
 
-grep  --line-buffered -P "$" | awk 'function gettime(l){return systime()} 
+grep  --line-buffered -P "${1:-.}" | awk 'function gettime(l){return systime()} 
     {
         t=gettime($0);
         if(!pt){pt=t}
