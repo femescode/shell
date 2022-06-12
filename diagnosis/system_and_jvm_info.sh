@@ -2,7 +2,7 @@
 
 active_thread_kstack(){
   # 打印当前系统活跃java线程的内核栈
-  ps h -Lo pid,tid,s,pcpu,rss,comm,wchan:32,min_flt,maj_flt,lastcpu -C java| awk '
+  ps h -Lo pid,tid,s,pcpu,rss,comm,wchan:32,min_flt,maj_flt,lastcpu -p $1| awk '
     BEGIN{
         syscall_files["/usr/include/asm/unistd_64.h"]=1;
         syscall_files["/usr/include/x86_64-linux-gnu/asm/unistd_64.h"]=1;
@@ -81,13 +81,14 @@ active_thread_kstack(){
     }'
 }
 
-while read vmstat; do
+for i in `seq ${1:-1}`; do
     pid=`ps h -o pid --sort=-pmem -C java|head -n1`
+    [[ ! $pid ]] && { sleep 1; continue; }
     date +%FT%T
-    echo "vmstat: $vmstat"
-    echo "top:" `top -d 0.5 -b -n2 -p $pid|tac|sed '/top -/q'|tac|sed -z 's/\n/\\n/g'`
     echo "mem_alloc:" `cat /proc/vmstat|grep -E "pageoutrun|allocstall"`
     echo "cgroup_cpu_stat:" `cat /sys/fs/cgroup/cpu,cpuacct/cpu.stat`
-    active_thread_kstack
+    active_thread_kstack $pid
+    echo "vmstat: $(vmstat 1 2|tail -n+4)"
+    top -d 0.5 -b -n2 -p $pid|tac|sed '/top -/q'|tac|sed 's/^/top: /g'
     echo
-done < <(vmstat 1|stdbuf -o L tail -n+4)
+done 
