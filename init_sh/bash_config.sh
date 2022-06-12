@@ -16,7 +16,7 @@ fi
 dir="$(mktemp -d)"
 cd $dir
 
-tmpcmd="curl -s $url/init_sh/.profile_rc.sh -o /etc/.profile_rc.sh"
+tmpcmd="curl -s $url/init_sh/my_bashrc.sh -o /etc/my_bashrc.sh"
 
 if cmd_exists "sudo"; then
     sudo $tmpcmd
@@ -24,11 +24,18 @@ else
     $tmpcmd
 fi
 
-if [[ ! $(grep profile_rc ~/.bashrc) ]]; then
-    printf "\nif [ -f /etc/.profile_rc.sh ]; then\n\t. /etc/.profile_rc.sh\nfi" >> ~/.bashrc
+if [[ ! $(grep my_bashrc ~/.bashrc) ]]; then
+    cat >> ~/.bashrc <<eof
+
+if [ -f /etc/my_bashrc.sh ]; then
+    source /etc/my_bashrc.sh
 fi
 
-curl -s $url/init_sh/.vimrc -o ~/.vimrc 
+eof
+
+fi
+
+curl -s $url/init_sh/my_vimrc -o ~/.vimrc 
 
 rm -rf $dir
 
