@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ps u --sort=-pmem -C java|head -n2
