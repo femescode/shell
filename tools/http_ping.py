@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import sys,requests,time,json,hashlib,base64,uuid,io,os,argparse
+import sys,requests,time,json,hashlib,base64,uuid,io,os,argparse,re
 s = requests.Session()
 s.mount('https://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
 s.mount('http://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
@@ -14,7 +14,7 @@ def http_ping(seq, args):
     if args.header:
         for header in args.header:
             (key, value) = re.split(r'\s*:\s*', header.strip())
-            header[key] = value
+            headers[key] = value
     start = time.time()
     if args.request == "GET":
         resp = s.get(url,headers=headers, timeout=6000)
