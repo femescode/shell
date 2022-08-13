@@ -7,8 +7,10 @@ s.mount('https://', requests.adapters.HTTPAdapter(pool_connections=200, pool_max
 s.mount('http://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
 
 def http_ping(seq, args):
+    logid = uuid.uuid1().hex
     url = args.url
     headers = {}
+    headers['User-Agent']='curl_' + str(logid)
     if args.header:
         for header in args.header:
             (key, value) = re.split(r'\s*:\s*', header.strip())
@@ -20,7 +22,7 @@ def http_ping(seq, args):
         resp = s.post(url,data=args.data,headers=headers, timeout=6000)
     end = time.time()
     ret = resp.content.decode("UTF-8").replace("\r","").replace("\n","")
-    print("time=%s seq=%d cost=%.3fms" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start)), seq, (end - start) * 1000))
+    print("time=%s seq=%d logid=%s cost=%.3fms" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start)), seq, logid, (end - start) * 1000))
 
 
 parser = argparse.ArgumentParser(description='http ping test tools.')
