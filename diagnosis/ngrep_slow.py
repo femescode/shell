@@ -31,7 +31,7 @@ def trace_ngrep_slow(args):
             if pre_packet is None:
                 continue
             pre_timestamp = pre_packet.get('start')
-            cost = int(timestamp - pre_timestamp)
+            cost = timestamp - pre_timestamp
             pre_packet['cost'] = str(cost) + 's'
             pre_packet['resp'] = line
             if cost * 1000 > args.timeout:
