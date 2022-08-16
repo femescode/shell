@@ -8,7 +8,7 @@ def trace_ngrep_slow(args):
         if not line:
             continue
         line=line.strip()
-        if not 'T ' in line:
+        if not line.startswith('T '):
             continue
         columns = line.split(" ", 7)
         timestr = columns[1] + " " + columns[2]
@@ -21,10 +21,10 @@ def trace_ngrep_slow(args):
         payload = columns[7]
         (src_ip, src_port) = src_addr.split(":")
         (dst_ip, dst_port) = dst_addr.split(":")
-        if int(src_port) > 10000 and int(dst_port) < 10000 and (args.all or payload in ["POST","GET"] or re.search(r'...(select|insert|update|delete|replace)', payload, re.I)):
+        if int(src_port) > 10000 and int(dst_port) < 10000 and (args.all or re.search(r'^(POST|GET)', payload) or re.search(r'...(select|insert|update|delete|replace)', payload, re.I)):
             # 发包，记录时间缀
             pre_packet_map[src_addr+"-"+dst_addr] = {'microtimestamp': microtimestamp, 'req': line}
-        elif int(src_port) < 10000 and int(dst_port) > 10000 and (args.all or payload in ["HTTP/1.1"] or re.search(r'.def.', payload, re.I)):
+        elif int(src_port) < 10000 and int(dst_port) > 10000 and (args.all or re.search(r'HTTP/1.[01]', payload) or re.search(r'.def.', payload, re.I)):
             # 收包，计算时间差
             addr_pair = dst_addr+"-"+src_addr
             pre_packet = pre_packet_map.get(addr_pair)
