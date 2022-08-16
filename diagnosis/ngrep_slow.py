@@ -13,7 +13,7 @@ def trace_ngrep_slow(args):
         columns = line.split(" ", 7)
         timestr = columns[1] + " " + columns[2]
         dt = datetime.datetime.strptime(timestr,"%Y/%m/%d %H:%M:%S.%f")
-        microtimestamp = time.mktime(dt.timetuple()) * 1000000.0 + (dt.microsecond)
+        timestamp = time.mktime(dt.timetuple()) + (dt.microsecond/1000000.0)
         src_addr = columns[3]
         direction = columns[4]
         dst_addr = columns[5]
@@ -23,18 +23,18 @@ def trace_ngrep_slow(args):
         (dst_ip, dst_port) = dst_addr.split(":")
         if int(src_port) > 10000 and int(dst_port) < 10000 and (args.all or re.search(r'^(POST|GET)', payload) or re.search(r'...(select|insert|update|delete|replace)', payload, re.I)):
             # 发包，记录时间缀
-            pre_packet_map[src_addr+"-"+dst_addr] = {'microtimestamp': microtimestamp, 'req': line}
+            pre_packet_map[src_addr+"-"+dst_addr] = {'start': timestamp, 'req': line}
         elif int(src_port) < 10000 and int(dst_port) > 10000 and (args.all or re.search(r'HTTP/1.[01]', payload) or re.search(r'.def.', payload, re.I)):
             # 收包，计算时间差
             addr_pair = dst_addr+"-"+src_addr
             pre_packet = pre_packet_map.get(addr_pair)
             if pre_packet is None:
                 continue
-            pre_microtimestamp = pre_packet.get('microtimestamp')
-            cost = int(microtimestamp - pre_microtimestamp)
-            pre_packet['cost'] = cost
+            pre_timestamp = pre_packet.get('start')
+            cost = int(timestamp - pre_timestamp)
+            pre_packet['cost'] = str(cost) + 's'
             pre_packet['resp'] = line
-            if cost > args.timeout * 1000:
+            if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet))
                 del pre_packet_map[addr_pair]
 
