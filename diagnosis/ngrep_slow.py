@@ -39,7 +39,7 @@ def trace_ngrep_slow(args):
                 del pre_packet_map[addr_pair]
 
 parser = argparse.ArgumentParser(description='ngrep traffic slow response trace tools.',
-        usage="ngrep -d any -W single -s 800 -t  '' 'port 80'|python -u ngrep_slow.py --timeout 1000 |jq .")
+        usage="ngrep -d any -W single -s 800 -t -l  '' 'port 80'|python -u ngrep_slow.py --timeout 1000 |jq .")
 parser.add_argument("-t", "--timeout", type=int, default=1000, help='the timeout millisecond.')
 parser.add_argument("-a", "--all", action="store_true", help='trace all packet.')
 args = parser.parse_args()
