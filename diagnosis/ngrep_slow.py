@@ -2,6 +2,16 @@
 # coding:utf-8
 
 import re,datetime,time,json,sys,argparse
+
+def cost_show(cost):
+    if cost > 1:
+        return "%.3fs" % (cost)
+    if cost * 1000 > 1:
+        return "%.3fms" % (cost * 1000)
+    if cost * 1000000 > 1:
+        return "%.0fus" % (cost * 1000000)
+    return str(cost) + 's'
+
 def trace_ngrep_slow(args):
     pre_packet_map = {}
     for line in sys.stdin:
@@ -32,7 +42,7 @@ def trace_ngrep_slow(args):
                 continue
             pre_timestamp = pre_packet.get('start')
             cost = timestamp - pre_timestamp
-            pre_packet['cost'] = str(cost) + 's'
+            pre_packet['cost'] = cost_show(cost)
             pre_packet['resp'] = line
             if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet))
