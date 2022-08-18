@@ -39,7 +39,7 @@ def trace_ngrep_slow(args, stdout):
         (dst_ip, dst_port) = dst_addr.split(":")
         if int(src_port) > 10000 and int(dst_port) < 10000 and (not args.request_regex or re.search(args.request_regex, payload)) and (args.all or re.search(r'^(POST|GET)', payload) or re.search(r'...(select|insert|update|delete|replace)', payload, re.I)):
             # 发包，记录时间缀
-            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'time': timestr, 'req': payload})
+            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload})
         elif int(src_port) < 10000 and int(dst_port) > 10000 and (args.request_regex or args.all or re.search(r'HTTP/1.[01]', payload) or re.search(r'.def.', payload, re.I)):
             # 收包，计算时间差
             addr_pair = dst_addr+"-"+src_addr
@@ -50,6 +50,7 @@ def trace_ngrep_slow(args, stdout):
             cost = timestamp - pre_timestamp
             pre_packet['cost'] = cost_show(cost)
             pre_packet['resp'] = payload
+            pre_packet['conn'] = "%s %s %s %s %s" % (timestr, src_addr, direction, dst_addr, tcp_flag)
             if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet))
                 del pre_packet_map[addr_pair]
