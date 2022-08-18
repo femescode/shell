@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 
+import collections
 import re,datetime,time,json,sys,argparse,subprocess,os
 
 DEV_NULL = os.open(os.devnull, os.O_RDWR)
@@ -38,7 +39,7 @@ def trace_ngrep_slow(args, stdout):
         (dst_ip, dst_port) = dst_addr.split(":")
         if int(src_port) > 10000 and int(dst_port) < 10000 and (not args.request_regex or re.search(args.request_regex, payload)) and (args.all or re.search(r'^(POST|GET)', payload) or re.search(r'...(select|insert|update|delete|replace)', payload, re.I)):
             # 发包，记录时间缀
-            pre_packet_map[src_addr+"-"+dst_addr] = {'start': timestamp, 'req': line}
+            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload})
         elif int(src_port) < 10000 and int(dst_port) > 10000 and (args.request_regex or args.all or re.search(r'HTTP/1.[01]', payload) or re.search(r'.def.', payload, re.I)):
             # 收包，计算时间差
             addr_pair = dst_addr+"-"+src_addr
@@ -48,7 +49,7 @@ def trace_ngrep_slow(args, stdout):
             pre_timestamp = pre_packet.get('start')
             cost = timestamp - pre_timestamp
             pre_packet['cost'] = cost_show(cost)
-            pre_packet['resp'] = line
+            pre_packet['resp'] = payload
             if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet))
                 del pre_packet_map[addr_pair]
