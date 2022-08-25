@@ -40,4 +40,4 @@ pid="$1"
 [[ ! "$pid" ]] && { pid=`ps h -o pid --sort=-pmem -C java|head -n1`; }
 [[ ! "$pid" ]] && { echo 'not found java process, usage: $0 pid' >&2; exit 1; }
 
-jstack $pid|awk -v RS= "$awk_script" |sed -E 's/[0-9]+/n/g'|sort|uniq -c|sort -nr|column -t -s$'\t'
+jstack $pid|awk -F'\n' -v RS= "$awk_script" |sed -E 's/[0-9]+/n/g'|sort|uniq -c|sort -nr|column -t -s$'\t'
