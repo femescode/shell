@@ -18,19 +18,21 @@ awk_script='
         }
     }
     if(state == "BLOCKED"){
-        state = "wait_synchronized"
+        state = "SYNCHRONIZED"
     }else if(state == "TIMED_WAITING" && match(s,/java.lang.Thread.sleep/,m)){
-        state = "sleep"
+        state = "SLEEP"
     }else if(state == "WAITING" && match(s,/AbstractQueuedSynchronizer.acquire/,m)){
-        state = "wait_lock"
+        state = "WAIT_LOCK"
     }else if(state == "WAITING" && match(s,/ThreadPoolExecutor.getTask/,m)){
-        state = "wait_task"
+        state = "WAIT_TASK"
     }else if(state == "RUNNABLE" && match(s,/SelectorImpl.select/,m)){
-        state = "wait_epoll"
+        state = "WAIT_EPOLL"
     }else if(state == "RUNNABLE" && match(s,/com.mysql.jdbc.MysqlIO/,m)){
-        state = "wait_mysql"
+        state = "WAIT_MYSQL"
+    }else if(state == "RUNNABLE" && match(s,/CloseableHttpClient.execute/,m)){
+        state = "WAIT_HTTP"
     }else if(state == "RUNNABLE" && match(s,/java.net.SocketInputStream.read/,m)){
-        state = "wait_sock_read"
+        state = "WAIT_SOCKET"
     }
     print name "\t" state;
 }
