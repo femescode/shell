@@ -4,9 +4,9 @@ awk_script='
 /^"/ && NF>30 {
     s = $0;
     match(s,/^"([^"]+)"/,m);
-    name = m[1];
-    idx = match(s,/java.lang.Thread.State: (\w+)/,m);
-    if(idx > 0){
+    name = gensub(/[0-9]+/, "n", "g", m[1]);
+
+    if(match(s,/java.lang.Thread.State: (\w+)/,m)){
         state = m[1];
     }else{
         if(match(s,/nid=\w+ Object.wait\(\)/,m)){
@@ -34,7 +34,18 @@ awk_script='
     }else if(state == "RUNNABLE" && match(s,/java.net.SocketInputStream.read/,m)){
         state = "WAIT_SOCKET"
     }
-    print name "\t" state;
+    
+    method="-"
+    for(i=1;i<=NF;i++){
+        if(!match($i,/^at \w+\./,m)){
+            continue;
+        }
+        if(match($i,/^at (java|javax|sun)\./,m)){
+            continue;
+        }
+        method = $i
+    }
+    print name "\t" state "\t" method;
 }
 '
 
@@ -42,4 +53,4 @@ pid="$1"
 [[ ! "$pid" ]] && { pid=`ps h -o pid --sort=-pmem -C java|head -n1`; }
 [[ ! "$pid" ]] && { echo 'not found java process, usage: $0 pid' >&2; exit 1; }
 
-jstack $pid|awk -F'\n' -v RS= "$awk_script" |sed -E 's/[0-9]+/n/g'|sort|uniq -c|sort -nr|column -t -s$'\t'
+jstack $pid|awk -F'\n' -v RS= "$awk_script" |sort|uniq -c|sort -nr|column -t -s$'\t'
