@@ -37,10 +37,10 @@ awk_script='
     
     method="-"
     for(i=1;i<=NF;i++){
-        if(!match($i,/^at \w+\./,m)){
+        if(!match($i,/^\s*at \w+\./,m)){
             continue;
         }
-        if(match($i,/^at (java|javax|sun)\./,m)){
+        if(match($i,/^\s*at (java|javax|sun)\./,m)){
             continue;
         }
         method = $i
