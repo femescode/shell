@@ -44,6 +44,7 @@ awk_script='
             continue;
         }
         method = $i
+        break;
     }
     print name "\t" state "\t" method;
 }
