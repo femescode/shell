@@ -87,30 +87,39 @@ def jstack_with_cpu(pid):
         stack_map[tid] = {'thread_info':thread_info, 'stack_info': stack_info}
     return stack_map
 
-def get_agg_text(stack_data, show_len):
+def get_agg_text(stack_data, show_len, regex):
     stack_info = stack_data.get('stack_info')
 
     show_thread_name = re.sub(r'\d+', 'n', stack_info.get('threadname')) 
     show_stack_list = []
     i = 0
+    j = 0
     for stack_line in stack_info.get('stack_list'):
         i = i + 1
         if i <= 3:
             show_stack_list.append(stack_line)
             if i == 3:
                 show_stack_list.append('        ...')
+        
         if not re.search(r'^\s*at \w+\.', stack_line):
             continue
         if re.search(r'^\s*at (java|javax|sun)\.', stack_line):
             continue
+        j = j + 1
+        if j <= show_len:
+            show_stack_list.append(stack_line)
+            if j == show_len:
+                show_stack_list.append('        ...')
+        
+        if not regex or not re.search(regex, stack_line):
+            continue
         show_stack_list.append(stack_line)
-        if len(show_stack_list) >= show_len + 3:
-            break
     return "%s \t %s \n %s \n" % (stack_info.get('threadstate'), show_thread_name, '\n'.join(show_stack_list))
 
 def main():
     parser = argparse.ArgumentParser(description='sample java thread stacktrace by jstack.')
     parser.add_argument("-l", "--show_length", type=int, default=8, help='stacktrace show length')
+    parser.add_argument("-r", "--regex", type=str, help='stacktrace filter regex')
     parser.add_argument("-f", "--filter_length", type=int, default=30, help='stacktrace filter length')
     parser.add_argument("-n", "--num", type=int, default=sys.maxint, help='record stacktrace num')
     args = parser.parse_args()
@@ -134,7 +143,7 @@ def main():
             for tid,stack_data in stack_map.items():
                 if len(stack_data.get('stack_info').get('stack_list')) <= args.filter_length:
                     continue
-                agg_text = get_agg_text(stack_data, args.show_length)
+                agg_text = get_agg_text(stack_data, args.show_length, args.regex)
                 cpu = float(stack_data.get('thread_info').get('cpu'))
                 newcpu = agg_map[agg_text].get('cpu') + cpu
                 newcount = agg_map[agg_text].get('count') + 1
