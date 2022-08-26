@@ -96,7 +96,7 @@ def get_agg_text(stack_data, show_len, regex):
     j = 0
     for stack_line in stack_info.get('stack_list'):
         i = i + 1
-        if i <= 3:
+        if i <= 3 or show_len > len(stack_info.get('stack_list')):
             show_stack_list.append(stack_line)
             if i == 3:
                 show_stack_list.append('        ...')
