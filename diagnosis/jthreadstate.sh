@@ -56,7 +56,8 @@ awk_script='
     S[name "\t" state "\n" method]++
 }
 END{
-    asort(S,sorted_key_arr,"@val_num_desc") 
+    asorti(S,sorted_key_arr,"@val_num_desc") 
+    PROCINFO["sorted_in"] = "@ind_num_asc"
     for(i in sorted_key_arr){
         thread_key=sorted_key_arr[i]
         print S[thread_key],thread_key,"\n"
