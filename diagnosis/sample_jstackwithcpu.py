@@ -80,7 +80,8 @@ def jstack_with_cpu(pid):
         threadname = m.group(1)
         tid = int(m.group(2),base=16)
 
-        stack_info = {'threadname':threadname,'threadstate': get_thread_state(stackinfo),'stack_list':stacklines[1:]}
+        line_list = stacklines[1:]
+        stack_info = {'threadname':threadname,'threadstate': get_thread_state(stackinfo),'stack_list':line_list, 'stack_len': len(line_list)}
         thread_info = thread_map.get(tid)
         if not thread_info:
             continue
@@ -141,14 +142,13 @@ def main():
         while i < args.num:
             stack_map = jstack_with_cpu(pid)
             for tid,stack_data in stack_map.items():
-                if len(stack_data.get('stack_info').get('stack_list')) <= args.filter_length:
-                    continue
                 agg_text = get_agg_text(stack_data, args.show_length, args.regex)
                 cpu = float(stack_data.get('thread_info').get('cpu'))
                 newcpu = agg_map[agg_text].get('cpu') + cpu
                 newcount = agg_map[agg_text].get('count') + 1
                 agg_map[agg_text]["cpu"] = newcpu
                 agg_map[agg_text]["count"] = newcount
+                agg_map[agg_text]["stack_len"] = stack_data.get('stack_info').get('stack_len')
             time.sleep(0.1)
             i = i + 1
     except (SystemExit, KeyboardInterrupt) as e:
@@ -160,6 +160,11 @@ def main():
     agg_items = agg_map.items()
     agg_items.sort(key=cmp_to_key(sort_by_cpu), reverse=True)
     for agg_text,val in agg_items:
-        print(str(val.get('cpu')) + "\t" + str(val.get('count')) + "\t" + agg_text)
+        cpu = val.get('cpu')
+        count = val.get('count')
+        stack_len = val.get('stack_len')
+        if (not cpu > 0.0) and stack_len <= args.filter_length:
+            continue
+        print(str(cpu) + "\t" + str(count) + "\t" + agg_text)
 
 main()
