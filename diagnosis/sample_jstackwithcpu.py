@@ -59,7 +59,7 @@ def get_thread_state(text):
     return state
 
 def jstack_with_cpu(pid):
-    top_ret = run_cmd("top -d 0.5 -b -n2 -H -p %s" % (str(pid)), shell=True)
+    top_ret = run_cmd("top -d 0.1 -b -n2 -H -p %s" % (str(pid)), shell=True)
     thread_text = re.split(r'\n\n+', top_ret)[-1]
     thread_map = {}
     for threadline in thread_text.splitlines():
