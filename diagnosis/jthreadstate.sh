@@ -35,7 +35,8 @@ awk_script='
         state = "WAIT_SOCKET"
     }
     
-    method="-"
+    method=""
+    n=0
     for(i=1;i<=NF;i++){
         if(!match($i,/^\s*at \w+\./,m)){
             continue;
@@ -43,10 +44,22 @@ awk_script='
         if(match($i,/^\s*at (java|javax|sun)\./,m)){
             continue;
         }
-        method = $i
-        break;
+        method = method ? (method "\n" $i) : $i
+        n++
+        if(n >= 4){
+            break;
+        }
     }
-    print name "\t" state "\t" method;
+    method = method ? method : "-"
+
+    
+    S[name "\t" state "\n" method]++
+}
+END{
+    asorti(S,sorted_key_arr,"@val_num_desc") 
+    for(k in sorted_key_arr){
+        print S[k],k
+    }
 }
 '
 
@@ -54,4 +67,4 @@ pid="$1"
 [[ ! "$pid" ]] && { pid=`ps h -o pid --sort=-pmem -C java|head -n1`; }
 [[ ! "$pid" ]] && { echo 'not found java process, usage: $0 pid' >&2; exit 1; }
 
-jstack $pid|awk -F'\n' -v RS= "$awk_script" |sort|uniq -c|sort -nr|column -t -s$'\t'
+jstack $pid|awk -F'\n' -v RS= "$awk_script" 
