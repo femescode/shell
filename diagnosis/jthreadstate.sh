@@ -57,8 +57,9 @@ awk_script='
 }
 END{
     asorti(S,sorted_key_arr,"@val_num_desc") 
-    for(k in sorted_key_arr){
-        print S[k],k
+    for(i in sorted_key_arr){
+        thread_key=sorted_key_arr[i]
+        print S[thread_key],thread_key
     }
 }
 '
