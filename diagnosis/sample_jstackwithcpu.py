@@ -92,15 +92,21 @@ def get_agg_text(stack_data, show_len):
 
     show_thread_name = re.sub(r'\d+', 'n', stack_info.get('threadname')) 
     show_stack_list = []
+    i = 0
     for stack_line in stack_info.get('stack_list'):
+        i = i + 1
+        if i <= 3:
+            show_stack_list.append(stack_line)
+            if i == 3:
+                show_stack_list.append('        ...')
         if not re.search(r'^\s*at \w+\.', stack_line):
             continue
         if re.search(r'^\s*at (java|javax|sun)\.', stack_line):
             continue
         show_stack_list.append(stack_line)
-        if len(show_stack_list) >= show_len:
+        if len(show_stack_list) >= show_len * 2:
             break
-    return "%s \t %s \n %s \n" % (show_thread_name, stack_info.get('threadstate'), '\n'.join(show_stack_list))
+    return "%s \t %s \n %s \n" % (stack_info.get('threadstate'), show_thread_name, '\n'.join(show_stack_list))
 
 def main():
     parser = argparse.ArgumentParser(description='sample java thread stacktrace by jstack.')
