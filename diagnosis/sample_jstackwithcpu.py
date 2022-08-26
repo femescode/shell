@@ -149,7 +149,7 @@ def main():
                 agg_map[agg_text]["cpu"] = newcpu
                 agg_map[agg_text]["count"] = newcount
                 agg_map[agg_text]["stack_len"] = stack_data.get('stack_info').get('stack_len')
-            time.sleep(0.1)
+            time.sleep(0.2)
             i = i + 1
     except (SystemExit, KeyboardInterrupt) as e:
         print("")
