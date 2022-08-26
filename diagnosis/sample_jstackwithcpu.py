@@ -163,7 +163,7 @@ def main():
         cpu = val.get('cpu')
         count = val.get('count')
         stack_len = val.get('stack_len')
-        if (not cpu > 0.0) and stack_len <= args.filter_length:
+        if stack_len <= args.filter_length and (not cpu > 10.0) :
             continue
         print(str(cpu) + "\t" + str(count) + "\t" + agg_text)
 
