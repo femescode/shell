@@ -104,7 +104,7 @@ def get_agg_text(stack_data, show_len):
         if re.search(r'^\s*at (java|javax|sun)\.', stack_line):
             continue
         show_stack_list.append(stack_line)
-        if len(show_stack_list) >= show_len * 2:
+        if len(show_stack_list) >= show_len + 3:
             break
     return "%s \t %s \n %s \n" % (stack_info.get('threadstate'), show_thread_name, '\n'.join(show_stack_list))
 
