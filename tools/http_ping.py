@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import sys,requests,time,json,hashlib,base64,uuid,io,os,argparse,re
+import sys,requests,time,json,hashlib,base64,uuid,io,os,argparse,re,math
+from collections import defaultdict
+from functools import cmp_to_key
+
 s = requests.Session()
 s.mount('https://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
 s.mount('http://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
@@ -30,6 +33,7 @@ parser.add_argument("-n", "--num", type=int, default=sys.maxint, help='ping time
 args = parser.parse_args()
 
 min = max = sum = 0
+cost_count_map = defaultdict(lambda: 0)
 seq = 0
 try:
     while seq < args.num :
@@ -45,9 +49,24 @@ try:
         if max == 0 or cost > max:
             max = cost
         sum = sum + cost
+        f = math.log(int(cost),2)
+        ff = math.floor(f)
+        cf = math.ceil(f)
+        if ff == cf:
+            cf = cf + 1
+        cost_range = "%d-%dms" % (int(math.pow(2, ff)), int(math.pow(2, cf)))
+        cost_count_map[cost_range] = cost_count_map[cost_range] + 1
 
         time.sleep(1)
 except (KeyboardInterrupt) as e:
     pass
 
 print("\n rtt min/avg/max = %.3f/%.3f/%.3f ms" % (min, sum/seq, max))
+
+print("\n %8s\t%s" % ("cost", "num"))
+cost_arr = list(cost_count_map.keys())
+def cmp_cost_key(x, y):
+    return int(x.split("-")[0]) - int(y.split("-")[0])
+cost_arr.sort(key=cmp_to_key(cmp_cost_key))
+for k in cost_arr:
+    print(" %8s\t%s" % (str(k), str(cost_count_map.get(k))))
