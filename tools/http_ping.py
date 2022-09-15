@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import sys,requests,time,json,hashlib,base64,uuid,io,os,argparse,re,math
+import traceback
 from collections import defaultdict
 from functools import cmp_to_key
 
@@ -29,7 +30,7 @@ parser.add_argument('url')
 parser.add_argument('-X', "--request", type=str, choices=["GET", "POST"], default="GET", help='request method.')
 parser.add_argument('-d', "--data", type=str, help='request data.')
 parser.add_argument('-H', "--header", type=str, nargs='*', help='request header.')
-parser.add_argument("-n", "--num", type=int, default=sys.maxint, help='ping times.')
+parser.add_argument("-n", "--num", type=int, default=sys.maxsize, help='ping times.')
 args = parser.parse_args()
 
 min = max = sum = 0
@@ -60,8 +61,11 @@ try:
         time.sleep(1)
 except (KeyboardInterrupt) as e:
     pass
+except (requests.exceptions.RequestException) as e:
+    print(traceback.format_exc())
 
-print("\n rtt min/avg/max = %.3f/%.3f/%.3f ms" % (min, sum/seq, max))
+if seq > 0:
+    print("\n rtt min/avg/max = %.3f/%.3f/%.3f ms" % (min, sum/seq, max))
 
 print("\n %8s\t%s" % ("cost", "num"))
 cost_arr = list(cost_count_map.keys())
