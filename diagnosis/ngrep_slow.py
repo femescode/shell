@@ -42,6 +42,8 @@ def trace_ngrep_slow(args, inputStream, outputStream):
         (src_ip, src_port) = src_addr.split(":")
         (dst_ip, dst_port) = dst_addr.split(":")
         if int(src_port) > 10000 and int(dst_port) < 10000 and (not args.request_regex or re.search(args.request_regex, payload)) and (args.all or re.search(r'^(POST|GET)', payload) or re.search(r'...(select|insert|update|delete|replace)', payload, re.I)):
+            if tcp_flag == '[A]' and len(payload) < 30:
+                continue
             # 发包，记录时间缀
             pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload})
         elif int(src_port) < 10000 and int(dst_port) > 10000 and (args.request_regex or args.all or re.search(r'HTTP/1.[01]', payload) or re.search(r'.def.', payload, re.I)):
@@ -52,6 +54,9 @@ def trace_ngrep_slow(args, inputStream, outputStream):
                 continue
             pre_timestamp = pre_packet.get('start')
             cost = timestamp - pre_timestamp
+            if tcp_flag == '[A]' and len(payload) < 30:
+                pre_packet['ack_rtt'] = cost_show(cost)
+                continue
             pre_packet['cost'] = cost_show(cost)
             pre_packet['resp'] = payload
             pre_packet['conn'] = "%s %s %s %s %s" % (timestr, src_addr, direction, dst_addr, tcp_flag)
