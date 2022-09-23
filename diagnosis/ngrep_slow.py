@@ -2,7 +2,9 @@
 # coding:utf-8
 
 import collections
+import io
 import re,datetime,time,json,sys,argparse,subprocess,os
+import tempfile
 
 DEV_NULL = os.open(os.devnull, os.O_RDWR)
 
@@ -18,11 +20,13 @@ def cost_show(cost):
         return "%.0fus" % (cost * 1000000)
     return str(cost) + 's'
 
-def trace_ngrep_slow(args, stdout):
+def trace_ngrep_slow(args, inputStream, outputStream):
     pre_packet_map = {}
-    for line in stdout:
+    for line in iter(inputStream.readline, b''):
         if not line:
             continue
+        if outputStream:
+            outputStream.write(line)
         line=line.strip()
         if not line.startswith('T '):
             continue
@@ -61,20 +65,30 @@ parser.add_argument('bpf_filter', default="")
 parser.add_argument('-r', '--request_regex', default=None, required=False)
 parser.add_argument("-t", "--timeout", type=int, default=1000, help='the timeout millisecond.')
 parser.add_argument("-a", "--all", action="store_true", help='trace all packet.')
+parser.add_argument("-f", "--input_file", default=None, required=False, help='ngrep trace file.')
 args = parser.parse_args()
 
 if not exists_cmd("ngrep"):
     sys.stderr.write("ngrep not found! \n")
     sys.exit(1)
 
-cmd_args = ["ngrep","-d","any","-W","single","-s","800","-t","-l",""]
-if args.bpf_filter != "":
-    cmd_args.append(args.bpf_filter)
-proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-try:
-    trace_ngrep_slow(args, proc.stdout)
-finally:
-    proc.stdout.close()
-    sys.stderr.write(proc.stderr.read()+"\n")
-    proc.stderr.close()
-    proc.kill()
+if not args.input_file:
+    cmd_args = ["ngrep","-d","any","-W","single","-s","800","-t","-l",""]
+    if args.bpf_filter != "":
+        cmd_args.append(args.bpf_filter)
+    sys.stderr.write("capture traffic with '%s'\n" % (" ".join(cmd_args)))
+    proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    tempfd, temppath = tempfile.mkstemp()
+    try:
+        with os.fdopen(tempfd, 'w') as outputStream:
+            trace_ngrep_slow(args, proc.stdout, outputStream)
+    finally:
+        proc.stdout.close()
+        sys.stderr.write(proc.stderr.read()+"\n")
+        proc.stderr.close()
+        proc.kill()
+        sys.stderr.write("tempfile: %s\n" % temppath)
+else:
+    with io.open(args.input_file, "r", encoding='utf-8') as inputStream:
+        trace_ngrep_slow(args, inputStream, None)
+

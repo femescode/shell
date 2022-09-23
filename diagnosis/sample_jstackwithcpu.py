@@ -122,7 +122,7 @@ def main():
     parser.add_argument("-l", "--show_length", type=int, default=8, help='stacktrace show length')
     parser.add_argument("-r", "--regex", type=str, help='stacktrace filter regex')
     parser.add_argument("-f", "--filter_length", type=int, default=30, help='stacktrace filter length')
-    parser.add_argument("-n", "--num", type=int, default=sys.maxint, help='record stacktrace num')
+    parser.add_argument("-n", "--num", type=int, default=sys.maxsize, help='record stacktrace num')
     args = parser.parse_args()
 
     for cmd in ["ps", "top", "jstack"]:
