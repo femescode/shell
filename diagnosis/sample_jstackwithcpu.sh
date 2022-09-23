@@ -11,7 +11,7 @@ function jstackwithcpu(){
 pid="$2"
 [[ ! "$pid" ]] && { pid=`ps h -o pid --sort=-pmem -C java|head -n1`; }
 [[ ! "$pid" ]] && { echo "not found java process, usage: $0 num pid" >&2; exit 1; }
-jstacklog=$(mktemp -p . jstack_XXXXXXXXXX.log)
+jstacklog=$(mktemp jstack_XXXXXXXXXX.log)
 
 num="${1:-10}"
 for i in `seq $num`;do 
@@ -25,3 +25,4 @@ cat $jstacklog|sed -E -e 's/0x[0-9a-z]+/0x00/g' -e '/^[0-9.]+ ::: "/ s/[0-9]+/n/
     |sed 's/$/\n/;s/\\n/\n/g' \
     |less -S
 
+rm $jstacklog
