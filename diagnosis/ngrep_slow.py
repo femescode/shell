@@ -68,12 +68,13 @@ def trace_ngrep_slow(args, inputStream, outputStream):
         payload = columns[7]
         (src_ip, src_port) = src_addr.split(":")
         (dst_ip, dst_port) = dst_addr.split(":")
+        packet_prefix = "%s %s %s %s %s" % (timestr, src_addr, direction, dst_addr, tcp_flag)
         addr_pair = dst_addr+"-"+src_addr
         if is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
             if tcp_flag == '[A]' and len(payload) < 30:
                 continue
             # 发包，记录时间缀
-            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload})
+            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload, 'conn':[packet_prefix]})
         elif pre_packet_map.get(addr_pair):
             # 收包，计算时间差
             pre_packet = pre_packet_map.get(addr_pair)
@@ -84,7 +85,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
                 continue
             pre_packet['cost'] = cost_show(cost)
             pre_packet['resp'] = payload
-            pre_packet['conn'] = "%s %s %s %s %s" % (timestr, src_addr, direction, dst_addr, tcp_flag)
+            pre_packet['conn'].append(packet_prefix)
             if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet, indent=2))
                 del pre_packet_map[addr_pair]
