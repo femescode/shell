@@ -36,15 +36,15 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
     if args.out_request and src_ip not in args.local_ip:
         return False
     if args.request_regex:
-        if re.search(args.request_regex, payload):
-            return True
+        if not re.search(args.request_regex, payload, re.I):
+            return False
     else:
         if re.search(r'^(POST|GET) /', payload):
             return True
         if re.search(r'\.\.\.(select|insert|update|delete|replace)\b', payload, re.I):
             return True
-        if (int(src_port) > 10000 and int(dst_port) < 10000):
-            return True
+    if (int(src_port) > 10000 and int(dst_port) < 10000):
+        return True
     return False
 
 def trace_ngrep_slow(args, inputStream, outputStream):
@@ -94,7 +94,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
             pre_packet['packets'].append(packet_prefix)
             if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet, indent=2))
-                del pre_packet_map[addr_pair]
+            del pre_packet_map[addr_pair]
 
 def main():
     parser = argparse.ArgumentParser(description='ngrep traffic slow response trace tools.',
