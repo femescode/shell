@@ -77,9 +77,9 @@ def trace_ngrep_slow(args, inputStream, outputStream):
             packet = collections.OrderedDict({})
             packet['start'] = timestamp
             packet['req'] = payload
-            packet['cost'] = ''
             packet['resp'] = ''
-            packet['conn'] = [packet_prefix]
+            packet['packets'] = [packet_prefix]
+            packet['cost'] = ''
             pre_packet_map[src_addr+"-"+dst_addr] = packet
         elif pre_packet_map.get(addr_pair):
             # 收包，计算时间差
@@ -91,7 +91,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
                 continue
             pre_packet['cost'] = cost_show(cost)
             pre_packet['resp'] = payload
-            pre_packet['conn'].append(packet_prefix)
+            pre_packet['packets'].append(packet_prefix)
             if cost * 1000 > args.timeout:
                 print(json.dumps(pre_packet, indent=2))
                 del pre_packet_map[addr_pair]
