@@ -59,13 +59,17 @@ def get_thread_state(text):
     return state
 
 def get_thread_info_by_top(pid):
-    top_ret = run_cmd("top -d 0.1 -b -n2 -H -p %s" % (str(pid)), shell=True)
+    top_ret = run_cmd("top -d 0.1 -b -n2 -w 207 -H -p %s" % (str(pid)), shell=True)
     thread_text = re.split(r'\n\n+', top_ret)[-1]
     thread_map = {}
     for threadline in thread_text.splitlines():
         if 'PID' in threadline:
             continue
-        thread_fields = threadline.strip().split()
+        split_lines = re.split("                                 +", threadline.strip())
+        if len(split_lines) == 2:
+            thread_fields = re.split(r'\s+',split_lines[0].strip(), maxsplit=11)
+        else:
+            thread_fields = re.split(r'\s+',threadline.strip(), maxsplit=11)
         tid = int(thread_fields[0])
         thread_map[tid] = {'stat':thread_fields[7], 'cpu':thread_fields[8], 'mem':thread_fields[9], 'cpu_time':thread_fields[10], "threadname": thread_fields[11], "threadstate": thread_fields[7]}
     return thread_map
@@ -122,21 +126,23 @@ def get_kstack_by_proc(pid, tid):
             sys.stderr.write(traceback.format_exc())
         return []
 
-def jstack_with_cpu(args, pid, has_pstack):
+def jstack_with_cpu(args, pid, has_pstack, has_jstack):
     thread_map = get_thread_info_by_top(pid)
-    jstack_map = get_stack_by_jstack(pid)
+    jstack_map = {}
+    if has_jstack and args.java_stack:
+        jstack_map = get_stack_by_jstack(pid)
     pstack_map = {}
     if has_pstack and args.user_stack:
         pstack_map = get_stack_by_pstack(pid)
     for tid, thread_info in thread_map.items():
-        kstack_list = get_kstack_by_proc(pid, tid)
-        thread_info["kstack_list"] = kstack_list
+        if args.kernel_stack:
+            kstack_list = get_kstack_by_proc(pid, tid)
+            thread_info["kstack_list"] = kstack_list
 
-        if pstack_map:
-            pstack_info = pstack_map.get(tid)
-            if pstack_info:
-                pstack_list = pstack_info.get("stack_list")
-                thread_info["pstack_list"] = pstack_list
+        pstack_info = pstack_map.get(tid)
+        if pstack_info:
+            pstack_list = pstack_info.get("stack_list")
+            thread_info["pstack_list"] = pstack_list
         
         jstack_info = jstack_map.get(tid)
         if jstack_info:
@@ -161,15 +167,18 @@ def get_agg_stack_list(thread_info, regex):
     
     jstack_list = thread_info.get('jstack_list')
     if jstack_list and len(jstack_list) > 0:
-        show_stack_list.append("        ---------------jstack----------------------")
+        show_jstack_list = []
         for stack_line in jstack_list:
             if not re.search(r'^\s*at \w+\.', stack_line):
                 continue
             if regex:
                 if re.search(regex, stack_line):
-                    show_stack_list.append(stack_line)
+                    show_jstack_list.append(stack_line)
             else:
-                show_stack_list.append(stack_line)
+                show_jstack_list.append(stack_line)
+        if len(show_jstack_list) > 0:
+            show_stack_list.append("        ---------------jstack----------------------")
+            show_stack_list.extend(show_jstack_list)
         
     return show_stack_list
 
@@ -188,23 +197,28 @@ def get_single_stack_list(thread_info):
     
     jstack_list = thread_info.get('jstack_list')
     if jstack_list and len(jstack_list) > 0:
-        show_stack_list.append("        ---------------jstack----------------------")
+        show_jstack_list = []
         for stack_line in jstack_list:
             if re.search(r'^\s*java.lang.Thread.State:', stack_line):
                 continue
-            show_stack_list.append(stack_line)
+            show_jstack_list.append(stack_line)
+        if len(show_jstack_list) > 0:
+            show_stack_list.append("        ---------------jstack----------------------")
+            show_stack_list.extend(show_jstack_list)
     
     return show_stack_list
 
 def main():
     parser = argparse.ArgumentParser(description='sample java thread stacktrace by jstack.')
     parser.add_argument("-c", "--count", type=int, default=sys.maxsize, help='record stacktrace count')
+    parser.add_argument("-j", "--java_stack", action="store_true", help='show java stack')
     parser.add_argument("-u", "--user_stack", action="store_true", help='show user space stack')
+    parser.add_argument("-k", "--kernel_stack", action="store_true", help='show kernel space stack')
     parser.add_argument("-r", "--frame_regex", type=str, help='show stack frame that match regex')
     parser.add_argument("-l", "--show_length", type=int, default=30, help='show stack depth over length')
     args = parser.parse_args()
 
-    for cmd in ["ps", "top", "jstack"]:
+    for cmd in ["ps", "top"]:
         if not exists_cmd(cmd):
             sys.stderr.write("%s command not found! please install it first. \n" % (cmd))
             sys.exit(1)
@@ -217,21 +231,24 @@ def main():
     has_pstack = False
     if args.user_stack:
         has_pstack = exists_cmd("pstack")
+    has_jstack = False
+    if args.java_stack:
+        has_jstack = exists_cmd("jstack")
     if args.count == 1:
-        thread_map = jstack_with_cpu(args, pid, has_pstack)
+        thread_map = jstack_with_cpu(args, pid, has_pstack, has_jstack)
         for tid,thread_info in thread_map.items():
             stack_text = '\n'.join(get_single_stack_list(thread_info))
             segment_text = "%s \t %s(%s) \t %s(%s) \n%s \n" % (
                 str(thread_info.get('cpu')), thread_info.get('threadstate'), thread_info.get('stat'), 
                 thread_info.get('threadname'), str(tid), stack_text)
-            print(segment_text)
+            print(segment_text.strip()+"\n")
     else:
         sys.stderr.write("collect java stacktrace begin, press Ctrl + c to stop... \n")
         agg_map = defaultdict(lambda :{'cpu':0.0,'count':0})
         try:
             i = 0
             while i < args.count:
-                thread_map = jstack_with_cpu(args, pid, has_pstack)
+                thread_map = jstack_with_cpu(args, pid, has_pstack, has_jstack)
                 for tid,thread_info in thread_map.items():
                     agg_thread_name = re.sub(r'\d+', 'n', thread_info.get('threadname')) 
                     agg_stack_list = get_agg_stack_list(thread_info, args.frame_regex)
@@ -256,10 +273,10 @@ def main():
         for agg_key,agg_info in agg_items:
             cpu = agg_info.get('cpu')
             count = agg_info.get('count')
-            if agg_info.get('stack_len') <= args.show_length and (cpu < 10.0) :
+            if args.show_length > 0 and agg_info.get('stack_len') <= args.show_length and (cpu < 10.0) :
                 continue
             segment_text = "%s \t %s \t %s \n%s \n" % (
                 str(cpu), str(count), agg_info.get('threadname'), agg_info.get('stack'))
-            print(segment_text)
+            print(segment_text.strip()+"\n")
 
 main()
