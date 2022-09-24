@@ -126,10 +126,16 @@ def main():
             cmd_args.append(args.bpf_filter)
         sys.stderr.write("capture traffic with '%s'\n" % (" ".join(cmd_args)))
         proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
-        tempfd, temppath = tempfile.mkstemp()
         try:
-            with os.fdopen(tempfd, 'w') as outputStream:
-                trace_ngrep_slow(args, proc.stdout, outputStream)
+            if not args.save:
+                trace_ngrep_slow(args, inputStream, None)
+            else:
+                tempfd, temppath = tempfile.mkstemp()
+                try:
+                    with os.fdopen(tempfd, 'w') as outputStream:
+                        trace_ngrep_slow(args, proc.stdout, outputStream)
+                finally:
+                    sys.stderr.write("tempfile: %s\n" % temppath)
         except (KeyboardInterrupt) as e:
             pass
         finally:
@@ -137,7 +143,6 @@ def main():
             sys.stderr.write(proc.stderr.read()+"\n")
             proc.stderr.close()
             proc.kill()
-            sys.stderr.write("tempfile: %s\n" % temppath)
     else:
         with io.open(args.input_file, "r", encoding='utf-8') as inputStream:
             trace_ngrep_slow(args, inputStream, None)
