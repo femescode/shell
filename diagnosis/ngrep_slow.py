@@ -36,12 +36,12 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
     if args.out_request and src_ip not in args.local_ip:
         return False
     if args.request_regex:
-        if not re.search(args.request_regex, payload, re.I):
+        if not (src_port >= args.min_local_port and dst_port < args.min_local_port):
             return False
-        if (int(src_port) >= args.min_local_port and int(dst_port) < args.min_local_port):
+        if re.search(args.request_regex, payload, re.I):
             return True
     else:
-        if (int(src_port) >= args.min_local_port and int(dst_port) < args.min_local_port):
+        if (src_port >= args.min_local_port and dst_port < args.min_local_port):
             return True
         if re.search(r'^(POST|GET) /[^ ]* HTTP/1.[01]', payload):
             return True
@@ -74,7 +74,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
         (dst_ip, dst_port) = dst_addr.split(":")
         packet_prefix = "%s %s %s %s %s" % (timestr, src_addr, direction, dst_addr, tcp_flag)
         addr_pair = dst_addr+"-"+src_addr
-        if is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
+        if is_request(args, payload, src_ip, int(src_port), dst_ip, int(dst_port)):
             if tcp_flag == '[A]' and len(payload) < 30:
                 continue
             # 发包，记录时间缀
@@ -85,7 +85,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
             packet['packets'] = [packet_prefix]
             packet['cost'] = ''
             pre_packet_map[src_addr+"-"+dst_addr] = packet
-        elif pre_packet_map.get(addr_pair):
+        elif addr_pair in pre_packet_map:
             # 收包，计算时间差
             pre_packet = pre_packet_map.get(addr_pair)
             pre_timestamp = pre_packet.get('start')
