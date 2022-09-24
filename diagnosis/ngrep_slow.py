@@ -52,12 +52,14 @@ def trace_ngrep_slow(args, inputStream, outputStream):
     for line in iter(inputStream.readline, b''):
         if not line:
             continue
-        if outputStream:
+        if args.save and outputStream:
             outputStream.write(line)
         line=line.strip()
         if not line.startswith('T '):
             continue
         columns = line.split(" ", 7)
+        if len(columns) < 8:
+            continue
         timestr = columns[1] + " " + columns[2]
         dt = datetime.datetime.strptime(timestr,"%Y/%m/%d %H:%M:%S.%f")
         timestamp = time.mktime(dt.timetuple()) + (dt.microsecond/1000000.0)
@@ -102,10 +104,11 @@ def main():
     parser.add_argument('bpf_filter', default="")
     parser.add_argument("-i", "--in_request", action="store_true", help='trace in request packet.')
     parser.add_argument("-o", "--out_request", action="store_true", help='trace out request packet.')
-    parser.add_argument("--local_ip", type=str, help='local ip list')
     parser.add_argument('-r', '--request_regex', default=None, required=False)
     parser.add_argument("-t", "--timeout", type=int, default=0, help='the timeout millisecond.')
-    parser.add_argument("-f", "--input_file", default=None, required=False, help='ngrep trace file.')
+    parser.add_argument("--local_ip", type=str, help='local ip list')
+    parser.add_argument("-s", "--save", action="store_true", help='save traffic text to temp file')
+    parser.add_argument("--input_file", default=None, required=False, help='ngrep trace file.')
     args = parser.parse_args()
 
     if not exists_cmd("ngrep"):
