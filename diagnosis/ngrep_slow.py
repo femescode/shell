@@ -100,7 +100,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
 
 def main():
     parser = argparse.ArgumentParser(description='ngrep traffic slow response trace tools.',
-            usage="python -u ngrep_slow.py --timeout 1000 'port 80' -o")
+            usage="python -u ngrep_slow.py 'port 80' -o --timeout 1000")
     parser.add_argument('bpf_filter', default="")
     parser.add_argument("-t", "--timeout", type=int, default=0, help='the timeout millisecond.')
     parser.add_argument("-i", "--in_request", action="store_true", help='trace in request packet.')
