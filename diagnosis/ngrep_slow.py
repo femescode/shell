@@ -38,13 +38,15 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
     if args.request_regex:
         if not re.search(args.request_regex, payload, re.I):
             return False
+        if (int(src_port) >= args.min_local_port and int(dst_port) < args.min_local_port):
+            return True
     else:
+        if (int(src_port) >= args.min_local_port and int(dst_port) < args.min_local_port):
+            return True
         if re.search(r'^(POST|GET) /[^ ]* HTTP/1.[01]', payload):
             return True
         if re.search(r'\.\.\.(select[\.\s].+[\.\s]from[\.\s]|insert[\.\s]+into[\.\s]|update[\.\s].+[\.\s]set[\.\s]|delete[\.\s]+from[\.\s]|replace[\.\s]+into[\.\s])', payload, re.I):
             return True
-    if (int(src_port) >= args.min_local_port and int(dst_port) < args.min_local_port):
-        return True
     return False
 
 def trace_ngrep_slow(args, inputStream, outputStream):
@@ -100,8 +102,8 @@ def trace_ngrep_slow(args, inputStream, outputStream):
 
 def main():
     parser = argparse.ArgumentParser(description='ngrep traffic slow response trace tools.',
-            usage="python -u ngrep_slow.py 'port 80' -o --timeout 1000")
-    parser.add_argument('bpf_filter', default="")
+            usage="python -u ngrep_slow.py '' -o -t 1000")
+    parser.add_argument('bpf_filter', default="", help="bpf filter, eg: port 8080")
     parser.add_argument("-t", "--timeout", type=int, default=0, help='the timeout millisecond.')
     parser.add_argument("-i", "--in_request", action="store_true", help='trace in request packet.')
     parser.add_argument("-o", "--out_request", action="store_true", help='trace out request packet.')
