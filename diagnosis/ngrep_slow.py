@@ -41,7 +41,7 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
     else:
         if re.search(r'^(POST|GET) /', payload):
             return True
-        if re.search(r'\.\.\.(select|insert|update|delete|replace)\b', payload, re.I):
+        if re.search(r'\.\.\.(select[\.\s].+[\.\s]from[\.\s]|insert[\.\s]+into[\.\s]|update[\.\s].+[\.\s]set[\.\s]|delete[\.\s]+from[\.\s]|replace[\.\s]+into[\.\s])', payload, re.I):
             return True
     if (int(src_port) > 10000 and int(dst_port) < 10000):
         return True
