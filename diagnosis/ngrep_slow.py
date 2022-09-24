@@ -39,7 +39,7 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
         if not re.search(args.request_regex, payload, re.I):
             return False
     else:
-        if re.search(r'^(POST|GET) /', payload):
+        if re.search(r'^(POST|GET) /[^ ]* HTTP/1.[01]', payload):
             return True
         if re.search(r'\.\.\.(select[\.\s].+[\.\s]from[\.\s]|insert[\.\s]+into[\.\s]|update[\.\s].+[\.\s]set[\.\s]|delete[\.\s]+from[\.\s]|replace[\.\s]+into[\.\s])', payload, re.I):
             return True
