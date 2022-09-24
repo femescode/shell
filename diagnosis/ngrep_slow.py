@@ -43,7 +43,7 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
             return True
         if re.search(r'\.\.\.(select[\.\s].+[\.\s]from[\.\s]|insert[\.\s]+into[\.\s]|update[\.\s].+[\.\s]set[\.\s]|delete[\.\s]+from[\.\s]|replace[\.\s]+into[\.\s])', payload, re.I):
             return True
-    if (int(src_port) > 10000 and int(dst_port) < 10000):
+    if (int(src_port) >= args.min_local_port and int(dst_port) < args.min_local_port):
         return True
     return False
 
@@ -100,15 +100,16 @@ def trace_ngrep_slow(args, inputStream, outputStream):
 
 def main():
     parser = argparse.ArgumentParser(description='ngrep traffic slow response trace tools.',
-            usage="python -u ngrep_slow.py --timeout 1000 'port 80'|jq .")
+            usage="python -u ngrep_slow.py --timeout 1000 'port 80' -o")
     parser.add_argument('bpf_filter', default="")
+    parser.add_argument("-t", "--timeout", type=int, default=0, help='the timeout millisecond.')
     parser.add_argument("-i", "--in_request", action="store_true", help='trace in request packet.')
     parser.add_argument("-o", "--out_request", action="store_true", help='trace out request packet.')
     parser.add_argument('-r', '--request_regex', default=None, required=False)
-    parser.add_argument("-t", "--timeout", type=int, default=0, help='the timeout millisecond.')
-    parser.add_argument("--local_ip", type=str, help='local ip list')
+    parser.add_argument("--min_local_port", type=int, default=32768, help='set tcp client min local port range')
     parser.add_argument("-s", "--save", action="store_true", help='save traffic text to temp file')
     parser.add_argument("--input_file", default=None, required=False, help='ngrep trace file.')
+    parser.add_argument("--local_ip", type=str, help='local ip list')
     args = parser.parse_args()
 
     if not exists_cmd("ngrep"):
