@@ -268,7 +268,7 @@ def main():
 
         def sort_by_cpu(o1, o2):
             return o1[1].get('cpu') - o2[1].get('cpu')
-        agg_items = agg_map.items()
+        agg_items = list(agg_map.items())
         agg_items.sort(key=cmp_to_key(sort_by_cpu), reverse=True)
         for agg_key,agg_info in agg_items:
             cpu = agg_info.get('cpu')
