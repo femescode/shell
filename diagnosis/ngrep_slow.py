@@ -74,7 +74,7 @@ def trace_ngrep_slow(args, inputStream, outputStream):
             if tcp_flag == '[A]' and len(payload) < 30:
                 continue
             # 发包，记录时间缀
-            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload, 'conn':[packet_prefix]})
+            pre_packet_map[src_addr+"-"+dst_addr] = collections.OrderedDict({'start': timestamp, 'req': payload, 'cost':'', 'resp':'', 'conn':[packet_prefix]})
         elif pre_packet_map.get(addr_pair):
             # 收包，计算时间差
             pre_packet = pre_packet_map.get(addr_pair)
