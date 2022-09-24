@@ -128,7 +128,7 @@ def main():
         proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
         try:
             if not args.save:
-                trace_ngrep_slow(args, inputStream, None)
+                trace_ngrep_slow(args, proc.stdout, None)
             else:
                 tempfd, temppath = tempfile.mkstemp()
                 try:
