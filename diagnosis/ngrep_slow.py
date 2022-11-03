@@ -49,13 +49,11 @@ def is_request(args, payload, src_ip, src_port, dst_ip, dst_port):
             return True
     return False
 
-def trace_ngrep_slow(args, inputStream, outputStream):
+def trace_ngrep_slow(args, inputStream):
     pre_packet_map = {}
     for line in iter(inputStream.readline, b''):
         if not line:
             continue
-        if args.save and outputStream:
-            outputStream.write(line)
         line=line.strip()
         if not line.startswith('T '):
             continue
@@ -109,8 +107,8 @@ def main():
     parser.add_argument("-o", "--out_request", action="store_true", help='trace out request packet.')
     parser.add_argument('-r', '--request_regex', default=None, required=False)
     parser.add_argument("--min_local_port", type=int, default=32768, help='set tcp client min local port range')
-    parser.add_argument("-s", "--save", action="store_true", help='save traffic text to temp file')
-    parser.add_argument("--input_file", default=None, required=False, help='ngrep trace file.')
+    parser.add_argument("-I", "--input_file", default=None, required=False, help='read packet stream from pcap format file pcap_dump.')
+    parser.add_argument("-O", "--output_file", default=None, required=False, help='dump matched packets in pcap format to pcap_dump')
     parser.add_argument("--local_ip", type=str, help='local ip list')
     args = parser.parse_args()
 
@@ -123,31 +121,24 @@ def main():
     else:
         args.local_ip = args.local_ip.split()
 
-    if not args.input_file:
-        cmd_args = ["ngrep","-d","any","-W","single","-s","800","-t","-l",""]
-        if args.bpf_filter != "":
-            cmd_args.append(args.bpf_filter)
-        sys.stderr.write("capture traffic with '%s'\n" % (" ".join(cmd_args)))
-        proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
-        try:
-            if not args.save:
-                trace_ngrep_slow(args, proc.stdout, None)
-            else:
-                tempfd, temppath = tempfile.mkstemp()
-                try:
-                    with os.fdopen(tempfd, 'w') as outputStream:
-                        trace_ngrep_slow(args, proc.stdout, outputStream)
-                finally:
-                    sys.stderr.write("tempfile: %s\n" % temppath)
-        except (KeyboardInterrupt) as e:
-            pass
-        finally:
-            proc.stdout.close()
-            sys.stderr.write(proc.stderr.read()+"\n")
-            proc.stderr.close()
-            proc.kill()
-    else:
-        with io.open(args.input_file, "r", encoding='utf-8') as inputStream:
-            trace_ngrep_slow(args, inputStream, None)
+    cmd_args = ["ngrep","-d","any","-W","single","-s","800","-t","-l"]
+    if args.input_file:
+        cmd_args.extend(["-I", args.input_file])
+    if args.output_file:
+        cmd_args.extend(["-O", args.output_file])
+    cmd_args.append("")
+    if args.bpf_filter != "":
+        cmd_args.append(args.bpf_filter)
+    sys.stderr.write("capture traffic with '%s'\n" % (" ".join(cmd_args)))
+    proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
+    try:
+        trace_ngrep_slow(args, proc.stdout)
+    except (KeyboardInterrupt) as e:
+        pass
+    finally:
+        proc.stdout.close()
+        sys.stderr.write(proc.stderr.read()+"\n")
+        proc.stderr.close()
+        proc.kill()
 
 main()
