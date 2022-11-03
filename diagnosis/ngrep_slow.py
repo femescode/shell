@@ -122,10 +122,10 @@ def main():
         args.local_ip = args.local_ip.split()
 
     if args.input_file:
-        cmd_args = ["ngrep","-W","single","-S","800","-t","-l"]
-        cmd_args.extend(["-I", args.input_file])
+        cmd_args = ["ngrep","-I", args.input_file,"-S","800"]
     else:
-        cmd_args = ["ngrep","-d","any","-W","single","-s","800","-t","-l"]
+        cmd_args = ["ngrep","-d","any","-s","800"]
+    cmd_args.extend(["-W","single","-t","-l"])
     if args.output_file:
         cmd_args.extend(["-O", args.output_file])
     cmd_args.append("")
