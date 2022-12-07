@@ -62,7 +62,7 @@ function append(    arr,item,limit){
                     print sb
                     print $0
                     fflush()
-                    exit(0)
+                    # exit(0)
                 }
             }
             delete cmap[key]
