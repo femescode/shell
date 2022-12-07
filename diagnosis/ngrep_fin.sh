@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# 没有数据的fin，ngrep不输出，所以这个不完善，使用tcpdump_fin.sh替代
+
 if [[ $# -lt 1 || $@ =~ '-h' || $@ =~ '--help' ]]; then
     echo -e "Trace peer side active close tcp connection." >&2
     echo -e "Usage: bash ngrep_fin.sh 'tcp and port 80' 80" >&2
