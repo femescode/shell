@@ -1,14 +1,12 @@
 #!/bin/bash
 
-# 没有数据的fin，ngrep不输出，所以这个不完善，使用tcpdump_fin.sh替代
-
-if [[ $# -lt 1 || $@ =~ '-h' || $@ =~ '--help' ]]; then
-    echo -e "Trace peer side active close tcp connection." >&2
-    echo -e "Usage: bash ngrep_fin.sh 'tcp and port 80' 80" >&2
+if [[ $# -lt 3 || $@ =~ '-h' || $@ =~ '--help' ]]; then
+    echo -e "Trace match pattern packet and it before 2 packet." >&2
+    echo -e "Usage: bash ngrep_fin.sh 'tcp and port 80' 80 'HTTP/1.1 200'" >&2
     exit 1
 fi
 
-ngrep -l -t -d any -W single '' "$1" | awk -v port="${2:-80}" '
+ngrep -l -t -d any -W single '' "$1" | awk -v port="${2:-80}" -v pat="$3" '
 function append(    arr,item,limit){
     min_idx=0
     max_idx=0
@@ -38,31 +36,27 @@ function append(    arr,item,limit){
         key = $4 "-" $6
         cmap[key][0]=0
         delete cmap[key][0]
-        if($7 !~ /F/){
-            append(cmap[key], $0, 2)
-        }else{
-            delete cmap[key]
-        }
+        append(cmap[key], $0, 2)
     }else{
         key = $6 "-" $4
         cmap[key][0]=0
         delete cmap[key][0]
-        if($7 !~ /F/){
+        if($0 !~ pat){
             append(cmap[key], $0, 2)
         }else{
             if(length(cmap[key])>0){
-                print "peer close"
+                print "get matched"
                 sb=""
                 PROCINFO["sorted_in"] = "@ind_num_asc";
                 for(i in cmap[key]){
-                    sb = sb "\n" cmap[key][i]
+                    sb = sb ? (sb "\n" cmap[key][i]) : cmap[key][i]
                     last = cmap[key][i]
                 }
                 if(last !~ /Connection: close/){
                     print sb
                     print $0
+                    print ""
                     fflush()
-                    exit(0)
                 }
             }
             delete cmap[key]
