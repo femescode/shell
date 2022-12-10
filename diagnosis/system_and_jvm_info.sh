@@ -81,14 +81,38 @@ active_thread_kstack(){
     }'
 }
 
-for i in `seq ${1:-1}`; do
-    pid=`ps h -o pid --sort=-pmem -C java|head -n1`
-    [[ ! $pid ]] && { sleep 1; continue; }
-    date +%FT%T
-    echo "mem_alloc:" `cat /proc/vmstat|grep -E "pageoutrun|allocstall"`
-    echo "cgroup_cpu_stat:" `cat /sys/fs/cgroup/cpu,cpuacct/cpu.stat`
-    active_thread_kstack $pid
-    echo "vmstat: $(vmstat 1 2|tail -n+4)"
-    top -d 0.5 -b -n2 -p $pid|tac|sed '/top -/q'|tac|sed 's/^/top: /g'
-    echo
-done 
+system_info(){
+    for i in `seq ${1:-1}`; do
+        pid=`ps h -o pid --sort=-pmem -C java|awk 'NR==1{print $1}'`
+        [[ ! $pid ]] && { sleep 1; continue; }
+        date +%FT%T
+        echo "mem_alloc:" `cat /proc/vmstat|grep -E "pageoutrun|allocstall"`
+        echo "cgroup_cpu_stat:" `cat /sys/fs/cgroup/cpu,cpuacct/cpu.stat`
+        # active_thread_kstack $pid
+        paste -s /proc/$pid/task/*/stack|sort|uniq -c|sort -nr
+        echo "vmstat: $(vmstat 1 2|tail -n+4)"
+        top -d 0.5 -b -n2 -p $pid|tac|sed '/top -/q'|tac|sed 's/^/top: /g'
+        echo
+    done 
+}
+
+log_prefix(){
+    echo -n "[$(date +'%Y-%m-%d %H:%M:%S')] [monitorJvm] [$(ifconfig|awk -v RS= '/eth0/{print $6}')] [INFO] hostname: $(hostname) $@"
+}
+
+if [[ ! $@ =~ "--monitor" ]]; then
+    system_info
+else
+    logfile="${2:-monitor.log}";
+    while sleep 1; do
+        res=$(curl --connect-timeout 2 --max-time 2 -sS http://localhost:8080/health |& tr '\r\n' ' ')
+        echo $res
+        if [[ ! $res =~ "ok" ]];then
+            { 
+                log_prefix; 
+                system_info 2 | sed -z 's/\n/\\n/g' ; 
+            } >> $logfile
+        fi
+    done
+fi
+
