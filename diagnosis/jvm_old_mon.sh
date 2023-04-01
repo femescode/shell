@@ -14,7 +14,11 @@ while sleep 1; do
     fi
     if [[ $n -ge 3 || $pre_fgc && $fgc -gt $pre_fgc && $n -ge 1 ]]; then
         jstack $pid > /home/work/logs/applogs/jstack-$now_time.log;
-        jmap -histo $pid > /home/work/logs/applogs/histo-$now_time.log;
+        if [[ "$@" =~ dump ]];then
+            jmap -dump:format=b,file=/home/work/logs/applogs/heap-$now_time.hprof $pid;
+        else
+            jmap -histo $pid > /home/work/logs/applogs/histo-$now_time.log;
+        fi
         { unset n pre_fgc; sleep 1m; continue; }
     fi
     pre_fgc=$fgc
