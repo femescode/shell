@@ -27,11 +27,13 @@ while sleep 1; do
     jmap_opt=1
     # has another jmap, wait it completed and not jmap again
     if pgrep jmap; then
-      while sleep 2s; do pgrep jmap || jmap_opt=0; done
+      while sleep 2s; do pgrep jmap || break; done
+      jmap_opt=0
     fi
     # jvm dumping heap,  wait it completed and not jmap again
     if jvm_dumping "$pid"; then
-      while sleep 2s; do jvm_dumping "$pid" || jmap_opt=0; done
+      while sleep 2s; do jvm_dumping "$pid" || break; done
+      jmap_opt=0
     fi
     # dump the jstack and jmap
     jstack "$pid" >/home/work/logs/applogs/jstack-"$now_time".log
@@ -53,4 +55,3 @@ while sleep 1; do
   fi
   pre_fgc=$fgc
 done
-
