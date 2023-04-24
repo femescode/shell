@@ -144,7 +144,7 @@ def get_wchan_by_proc(pid, tid):
     except (IOError) as e:
         if not e.errno in [2,13]:
             sys.stderr.write(traceback.format_exc())
-        return []
+        return ""
 
 def get_syscall_by_proc(pid, tid):
     procfile = "/proc/%s/task/%s/syscall" % (str(pid), str(tid))
@@ -154,7 +154,7 @@ def get_syscall_by_proc(pid, tid):
     except (IOError) as e:
         if not e.errno in [2,13]:
             sys.stderr.write(traceback.format_exc())
-        return []
+        return ""
 
 def jstack_with_cpu(args, pid, has_pstack, has_jstack):
     thread_map = get_thread_info_by_top(pid)
