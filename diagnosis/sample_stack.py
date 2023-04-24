@@ -167,14 +167,15 @@ def jstack_with_cpu(args, pid, has_pstack, has_jstack):
     for tid, thread_info in thread_map.items():
         thread_info["wchan"] = get_wchan_by_proc(pid, tid)
         syscall_arr = get_syscall_by_proc(pid, tid).split()
-        syscall_name = syscall_map.get(syscall_arr[0])
-        thread_info["syscall"] = syscall_name
-        if syscall_name in syscall_with_fd_set:
-            fdnum = str(int(syscall_arr[1], 16))
-            filename = run_cmd("readlink /proc/%s/fd/%s" % (str(pid), str(fdnum)), shell=True)
-            if fdnum in special_fd_map:
-                filename = filename + special_fd_map[fdnum]
-            thread_info["filename"] = filename
+        if len(syscall_arr) >= 1:
+            syscall_name = syscall_map.get(syscall_arr[0])
+            thread_info["syscall"] = syscall_name
+            if syscall_name in syscall_with_fd_set and len(syscall_arr) >= 2:
+                fdnum = str(int(syscall_arr[1], 16))
+                filename = run_cmd("readlink /proc/%s/fd/%s" % (str(pid), str(fdnum)), shell=True)
+                if fdnum in special_fd_map:
+                    filename = filename + special_fd_map[fdnum]
+                thread_info["filename"] = filename
 
         if args.kernel_stack:
             kstack_list = get_kstack_by_proc(pid, tid)
