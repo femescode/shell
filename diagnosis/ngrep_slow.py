@@ -196,18 +196,18 @@ def main():
     else:
         args.local_ip = args.local_ip.split()
     
-    if args.tcpdump:
-        cmd = "tcpdump"
-        cmd_args=get_tcpdump_cmd_args(args)
-    elif args.ngrep:
+    if args.ngrep:
         cmd = "ngrep"
         cmd_args=get_ngrep_cmd_args(args)
-    elif exists_cmd("tcpdump"):
+    elif args.tcpdump:
         cmd = "tcpdump"
         cmd_args=get_tcpdump_cmd_args(args)
     elif exists_cmd("ngrep"):
         cmd = "ngrep"
         cmd_args=get_ngrep_cmd_args(args)
+    elif exists_cmd("tcpdump"):
+        cmd = "tcpdump"
+        cmd_args=get_tcpdump_cmd_args(args)
     else:
         sys.stderr.write("tcpdump or ngrep not found! \n")
         sys.exit(1)
