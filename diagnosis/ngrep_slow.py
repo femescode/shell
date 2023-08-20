@@ -112,10 +112,11 @@ def record_packet(args, pre_packet_map, netPacket):
     dst_port = netPacket.dst_port
     tcp_flag = netPacket.tcp_flag
     payload = " \n ".join(netPacket.payloads)
-    
+    payload_len = len(payload)
+
     src_addr = "%s:%s" % (src_ip, src_port)
     dst_addr = "%s:%s" % (dst_ip, dst_port)
-    packet_prefix = "%s %s %s %s %s" % (timestr, src_addr, '->', dst_addr, tcp_flag)
+    packet_prefix = "%s %s %s %s %s len:%d" % (timestr, src_addr, '->', dst_addr, tcp_flag, payload_len)
     req_addr_pair = src_addr + "-" + dst_addr
     resp_addr_pair = dst_addr + "-" + src_addr
 
@@ -125,7 +126,7 @@ def record_packet(args, pre_packet_map, netPacket):
     if resp_addr_pair in pre_packet_map:
         pre_packet = pre_packet_map.get(resp_addr_pair)
     if is_request(args, payload, src_ip, int(src_port), dst_ip, int(dst_port)):
-        if tcp_flag in ['[A]','[.]']:
+        if tcp_flag in ['[A]','[.]'] and payload_len <= 40:
             return
         # 发包，记录时间缀
         packet = collections.OrderedDict({})
@@ -141,7 +142,7 @@ def record_packet(args, pre_packet_map, netPacket):
             # 收包，计算时间差
             pre_timestamp = pre_packet.get('start')
             cost = timestamp - pre_timestamp
-            if tcp_flag in ['[A]','[.]']:
+            if tcp_flag in ['[A]','[.]'] and payload_len <= 40:
                 pre_packet['ack_rtt'] = cost_show(cost)
                 return
             pre_packet['cost'] = cost_show(cost)
@@ -195,7 +196,7 @@ def main():
         args.local_ip = run_cmd("ifconfig|awk -v RS= '!/lo/{print $6}'", shell=True).split()
     else:
         args.local_ip = args.local_ip.split()
-    
+
     if args.ngrep:
         cmd = "ngrep"
         cmd_args=get_ngrep_cmd_args(args)
@@ -211,7 +212,7 @@ def main():
     else:
         sys.stderr.write("tcpdump or ngrep not found! \n")
         sys.exit(1)
-    
+
     sys.stderr.write("capture traffic with '%s'\n" % (" ".join(cmd_args)))
     proc = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
     try:
