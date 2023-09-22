@@ -28,11 +28,19 @@ class CostStatics:
         else:
             self.max = cost
 
-def execSql(con, sql):
+def execSql(con, rollback, sql):
     cur = con.cursor(cursor=pymysql.cursors.DictCursor)
-    cur.execute(sql)
-    rows = cur.fetchall()
-    return len(rows)
+    if rollback or not re.search(r'^\s*select', sql, re.I):
+        con.begin()
+        try:
+            cur.execute(sql)
+            return cur.rowcount
+        finally:
+            con.rollback()
+    else:
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return len(rows)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='command util.')
@@ -42,6 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('-u', "--user", required=True, help='user.')
     parser.add_argument('-p', "--password", required=True, help='password.')
     parser.add_argument('-D', "--database", required=True, help='database.')
+    parser.add_argument('-r', "--rollback", action="store_true", help='rollback.')
     args = parser.parse_args()
     con = pymysql.connect(
                 host=args.host,port=args.port,
@@ -55,7 +64,7 @@ if __name__ == '__main__':
             sql = "%s /* trace_id: %s */" % (args.sql, uid)
             
             start_time = time.time()
-            cnt = execSql(con, sql)
+            cnt = execSql(con, args.rollback, sql)
             end_time = time.time()
             cost = (end_time - start_time) * 1000
             
