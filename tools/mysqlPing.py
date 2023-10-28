@@ -7,6 +7,7 @@ import datetime,time
 import decimal
 import re
 import binascii,uuid
+import getpass
 
 class CostStatics:
     def __init__(self):
@@ -30,38 +31,64 @@ class CostStatics:
 
 def execSql(con, rollback, sql):
     cur = con.cursor(cursor=pymysql.cursors.DictCursor)
-    if rollback or not re.search(r'^\s*select', sql, re.I):
+    if not rollback and re.search(r'^\s*select', sql, re.I):
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return len(rows)
+    else:
         con.begin()
         try:
             cur.execute(sql)
             return cur.rowcount
         finally:
             con.rollback()
-    else:
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return len(rows)
+
+def get_multi_input(promot):
+    print(promot,end="")
+    lines = []
+    empty_num=0
+    while True:
+        line = input()
+        if line:
+            lines.append(line)
+            empty_num=0
+        else:
+            empty_num=empty_num+1
+        if empty_num >=3: 
+            break
+    return "\n".join(lines)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='command util.')
-    parser.add_argument('sql')
+    parser.add_argument('sql', nargs='?')
     parser.add_argument('-H', "--host", required=True, help='host.')
     parser.add_argument('-P', "--port", required=True, type=int, help='port.')
     parser.add_argument('-u', "--user", required=True, help='user.')
-    parser.add_argument('-p', "--password", required=True, help='password.')
+    parser.add_argument('-p', "--password", required=False, help='password.')
     parser.add_argument('-D', "--database", required=True, help='database.')
     parser.add_argument('-r', "--rollback", action="store_true", help='rollback.')
     args = parser.parse_args()
+    password = args.password
+    if not args.password:
+        password = getpass.getpass(prompt='password: ')
+    input_sql = args.sql
+    if not input_sql:
+        input_sql=get_multi_input("ping sql: \n")
+        print("")
     con = pymysql.connect(
                 host=args.host,port=args.port,
                 user=args.user,
-                password=args.password,
+                password=password,
                 database=args.database,charset='utf8')
+    if not args.rollback and re.search(r'^\s*select', input_sql, re.I):
+        con.autocommit(True)
+    else:
+        con.autocommit(False)
     costStatics = CostStatics()
     try:
         while True:
             uid = uuid.uuid1().hex
-            sql = "%s /* trace_id: %s */" % (args.sql, uid)
+            sql = "%s /* trace_id: %s */" % (input_sql, uid)
             
             start_time = time.time()
             cnt = execSql(con, args.rollback, sql)
