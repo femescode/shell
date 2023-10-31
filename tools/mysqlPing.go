@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -136,6 +137,10 @@ func get_multi_input(promot string) string {
 		if line != "" {
 			lines = append(lines, line)
 			empty_num = 0
+			re := regexp.MustCompile(`;\s*$`)
+			if re.MatchString(line) {
+				break
+			}
 		} else {
 			empty_num = empty_num + 1
 		}
@@ -186,6 +191,7 @@ func main() {
 	sqlstr := ""
 	if len(args) == 0 {
 		sqlstr = get_multi_input("Enter sql:>> \n")
+		fmt.Println("<< Execute sql begin...")
 	} else {
 		sqlstr = args[0]
 	}

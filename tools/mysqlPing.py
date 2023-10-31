@@ -52,6 +52,8 @@ def get_multi_input(promot):
         if line:
             lines.append(line)
             empty_num=0
+            if re.search(";\s*$", line):
+                break
         else:
             empty_num=empty_num+1
         if empty_num >=3: 
@@ -70,11 +72,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     password = args.password
     if not args.password:
-        password = getpass.getpass(prompt='password: ')
+        password = getpass.getpass(prompt='Enter password: ')
+        print("*" * len(password))
     input_sql = args.sql
     if not input_sql:
-        input_sql=get_multi_input("ping sql: \n")
-        print("")
+        input_sql=get_multi_input("Enter sql:>> \n")
+        print("<< Execute sql begin...")
     con = pymysql.connect(
                 host=args.host,port=args.port,
                 user=args.user,
