@@ -44,7 +44,7 @@ func (t *Timer) Record(d time.Duration, err error) {
 	}
 }
 
-func (t *Timer) CalAndClear() (int, int, error, time.Duration, time.Duration, time.Duration) {
+func (t *Timer) CalAndClear() (int, int, error, time.Duration, time.Duration, time.Duration, time.Duration) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	ok_cnt := t.ok_cnt
@@ -52,7 +52,7 @@ func (t *Timer) CalAndClear() (int, int, error, time.Duration, time.Duration, ti
 	last_err := t.last_err
 	if len(t.durations) == 0 {
 		t.Clear()
-		return ok_cnt, error_cnt, last_err, 0, 0, 0
+		return ok_cnt, error_cnt, last_err, 0, 0, 0, 0
 	}
 	sort.Slice(t.durations, func(i, j int) bool {
 		return t.durations[i] < t.durations[j]
@@ -62,11 +62,12 @@ func (t *Timer) CalAndClear() (int, int, error, time.Duration, time.Duration, ti
 	p95 := t.durations[idx]
 	idx99 := int(float64(len(t.durations)) * 0.99)
 	p99 := t.durations[idx99]
+	max := t.durations[len(t.durations)-1]
 
 	// clear record
 	t.Clear()
 
-	return ok_cnt, error_cnt, last_err, avg, p95, p99
+	return ok_cnt, error_cnt, last_err, avg, p95, p99, max
 }
 
 func (t *Timer) Clear() {
@@ -114,13 +115,13 @@ func go_limiter_exec(workers int64, qps float64, init func() interface{}, callba
 	for range ticker {
 		// 每秒执行一次的操作
 		qps := atomic.SwapInt64(&counter, 0)
-		ok_cnt, error_cnt, last_err, avg, p95, p99 := timer.CalAndClear()
+		ok_cnt, error_cnt, last_err, avg, p95, p99, max := timer.CalAndClear()
 		err_str := ""
 		if last_err != nil {
 			err_str = last_err.Error()
 		}
-		fmt.Printf("qps:%d, ok:%d, error:%d, avg:(%dms), p95:(%dms), p99:(%dms) %s\n",
-			qps, ok_cnt, error_cnt, avg.Milliseconds(), p95.Milliseconds(), p99.Milliseconds(), err_str)
+		fmt.Printf("qps:%d, ok:%d, error:%d, avg:(%.2fms), p95:(%.2fms), p99:(%.2fms), max:(%.2fms) %s\n",
+			qps, ok_cnt, error_cnt, float64(avg.Microseconds())/1e3, float64(p95.Microseconds())/1e3, float64(p99.Microseconds())/1e3, float64(max.Microseconds())/1e3, err_str)
 	}
 }
 
