@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import sys,requests,time,json,hashlib,base64,uuid,io,os,argparse,re,math
-import traceback
+import traceback,signal
 from collections import defaultdict
 from functools import cmp_to_key
 
@@ -10,10 +10,20 @@ s = requests.Session()
 s.mount('https://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
 s.mount('http://', requests.adapters.HTTPAdapter(pool_connections=200, pool_maxsize=200))
 
+def handler(signum, frame):
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, handler)
+
 def http_ping(seq, args, logid):
     url = args.url
     headers = {}
     headers['User-Agent']='curl_' + str(logid)
+    if args.data:
+        if re.search(r'^[^=]+=[^=&]+(&[^=]+=[^=&]+)*$', args.data):
+            headers['Content-Type']='application/x-www-form-urlencoded;charset=UTF-8'
+        elif re.search(r'^\s*(\{.*\}|\[.*\])\s*$', args.data):
+            headers['Content-Type']='application/json;charset=UTF-8'
     if args.header:
         for header in args.header:
             (key, value) = re.split(r'\s*:\s*', header.strip())
@@ -27,11 +37,16 @@ def http_ping(seq, args, logid):
 
 parser = argparse.ArgumentParser(description='http ping test tools.')
 parser.add_argument('url')
-parser.add_argument('-X', "--request", type=str, choices=["GET", "POST"], default="GET", help='request method.')
+parser.add_argument('-X', "--request", type=str, choices=["GET", "POST"], default=None, help='request method.')
 parser.add_argument('-d', "--data", type=str, help='request data.')
-parser.add_argument('-H', "--header", type=str, nargs='*', help='request header.')
+parser.add_argument('-H', "--header", action="append", type=str, help='request header.')
 parser.add_argument("-n", "--num", type=int, default=sys.maxsize, help='ping times.')
 args = parser.parse_args()
+if not args.request:
+    if args.data:
+        args.request = 'POST'
+    else:
+        args.request = 'GET'
 
 min = max = sum = 0
 cost_count_map = defaultdict(lambda: 0)
@@ -59,7 +74,7 @@ try:
         cost_count_map[cost_range] = cost_count_map[cost_range] + 1
 
         time.sleep(1)
-except (KeyboardInterrupt) as e:
+except (KeyboardInterrupt, SystemExit) as e:
     pass
 except (requests.exceptions.RequestException) as e:
     print(traceback.format_exc())

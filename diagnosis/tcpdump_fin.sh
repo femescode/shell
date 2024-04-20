@@ -6,7 +6,7 @@ if [[ $# -lt 1 || $@ =~ '-h' || $@ =~ '--help' ]]; then
     exit 1
 fi
 
-tcpdump -tttt -i any -l -nnn -A -s 1024 "$1" |stdbuf -oL sed 's/^2022-/b361528a75ef11ed86d800155d5fe859 &/'| awk -v RS=b361528a75ef11ed86d800155d5fe859 -v port="${2:-80}" '
+tcpdump -tttt -i any -l -nnn -A -s 1024 "$1" |stdbuf -oL sed 's/^202[4-9]-/b361528a75ef11ed86d800155d5fe859 &/'| awk -v RS=b361528a75ef11ed86d800155d5fe859 -v port="${2:-80}" '
 function append(    arr,item,limit){
     min_idx=0
     max_idx=0
@@ -18,10 +18,10 @@ function append(    arr,item,limit){
         max_idx=i
     }
     arr[max_idx+1]=item
-    # print "in:" (max_idx+1) "\t" item
+    # print "offer:" (max_idx+1) "\t" item
     if(length(arr) > limit){
         if(min_idx > 0){
-            # print "delete:" min_idx "\t" arr[min_idx]
+            # print "pop:" min_idx "\t" arr[min_idx]
             delete arr[min_idx]
         }
     }

@@ -2,7 +2,7 @@
 
 if [[ $# -lt 3 || $@ =~ '-h' || $@ =~ '--help' ]]; then
     echo -e "Trace match pattern packet and it before 2 packet." >&2
-    echo -e "Usage: bash ngrep_fin.sh 'tcp and port 80' 80 'HTTP/1.1 200'" >&2
+    echo -e "Usage: bash ngrep_with_before.sh 'tcp and port 80' 80 'HTTP/1.1 200'" >&2
     exit 1
 fi
 
@@ -18,10 +18,10 @@ function append(    arr,item,limit){
         max_idx=i
     }
     arr[max_idx+1]=item
-    # print "in:" (max_idx+1) "\t" item
+    # print "offer:" (max_idx+1) "\t" item
     if(length(arr) > limit){
         if(min_idx > 0){
-            # print "delete:" min_idx "\t" arr[min_idx]
+            # print "pop:" min_idx "\t" arr[min_idx]
             delete arr[min_idx]
         }
     }
