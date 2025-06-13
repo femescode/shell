@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -152,16 +154,34 @@ func get_multi_input(promot string) string {
 	return strings.Join(lines, "\n")
 }
 
-func httpGet(_httpCli *http.Client, url string, httpHeaderMap map[string]string) (string, error) {
-	request, err := http.NewRequest("GET", url, nil)
+func verboseAny(prefix string, v any) {
+	switch v.(type) {
+	case string:
+		fmt.Fprintln(os.Stderr, prefix+v.(string))
+	case *string:
+		fmt.Fprintln(os.Stderr, prefix+*(v.(*string)))
+	default:
+		dataBytes, _ := json.Marshal(v)
+		fmt.Fprintln(os.Stderr, prefix+string(dataBytes))
+	}
+}
+
+func httpRequest(_httpCli *http.Client, params *RequestParams) (string, error) {
+	var request *http.Request
+	var err error
+	if params.Body == "" {
+		request, err = http.NewRequest("GET", params.URL, nil)
+	} else {
+		request, err = http.NewRequest("POST", params.URL, bytes.NewBufferString(params.Body))
+	}
+
 	if err != nil {
-		return "", fmt.Errorf("http.NewRequest failed %v: %w", url, err)
+		return "", fmt.Errorf("http.NewRequest failed %v: %w", params.URL, err)
 	}
-	if httpHeaderMap == nil {
-		httpHeaderMap = make(map[string]string)
-		httpHeaderMap["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+	if _, ok := params.Headers["Content-Type"]; !ok {
+		params.Headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	}
-	for k, v := range httpHeaderMap {
+	for k, v := range params.Headers {
 		request.Header.Set(k, v)
 	}
 
@@ -180,6 +200,68 @@ func httpGet(_httpCli *http.Client, url string, httpHeaderMap map[string]string)
 	return bodystr, nil
 }
 
+type RequestParams struct {
+	URL     string
+	Headers map[string]string
+	Body    string
+}
+
+func splitByWhitespace(s string) []string {
+	return strings.FieldsFunc(s, func(r rune) bool {
+		return r == ' ' || r == '\t' || r == '\n' || r == '\r'
+	})
+}
+
+func parseRequestLine(line string) (*RequestParams, error) {
+	args := splitByWhitespace(line)
+	params := &RequestParams{
+		Headers: make(map[string]string),
+	}
+
+	fs := flag.NewFlagSet("httpRequest", flag.ContinueOnError)
+	var headers []string
+	fs.Func("H", "Request headers (e.g. 'content-type:application/json')", func(s string) error {
+		headers = append(headers, s)
+		return nil
+	})
+	body := fs.String("d", "", "Request body")
+
+	// 重新解析参数
+	err := fs.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查必填URL
+	if params.URL == "" {
+		// 尝试从非标志参数获取URL
+		for _, arg := range args {
+			if !strings.HasPrefix(arg, "-") && strings.HasPrefix(arg, "http") {
+				params.URL = arg
+				break
+			}
+		}
+		if params.URL == "" {
+			return nil, fmt.Errorf("URL is required")
+		}
+	}
+
+	// 处理头部
+	for _, header := range headers {
+		parts := strings.SplitN(header, ":", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid header format")
+		}
+		params.Headers[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+	}
+
+	// 处理请求体
+	if *body != "" {
+		params.Body = *body
+	}
+	return params, nil
+}
+
 func main() {
 	var filepath string
 	flag.StringVar(&filepath, "f", "", "filepath. ")
@@ -187,12 +269,18 @@ func main() {
 	flag.Int64Var(&workers, "t", 50, "worker thread num. (required)")
 	var qps float64
 	flag.Float64Var(&qps, "q", 0, "qps. (required)")
+	var headers []string
+	flag.Func("H", "Request headers (e.g. 'content-type:application/json')", func(s string) error {
+		headers = append(headers, s)
+		return nil
+	})
+	body := flag.String("d", "", "Request body")
+	verbose := flag.Bool("v", false, "verbose")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] url \n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-
 	if workers == 0 || qps == 0 {
 		flag.Usage()
 		os.Exit(2)
@@ -226,9 +314,21 @@ func main() {
 
 	var file *os.File
 	var scanner *bufio.Scanner
-	getLine := func() (string, error) {
+	getRequestParams := func() (*RequestParams, error) {
 		if urlstr != "" {
-			return urlstr, nil
+			params := &RequestParams{
+				URL:     urlstr,
+				Headers: make(map[string]string),
+				Body:    *body,
+			}
+			for _, header := range headers {
+				parts := strings.SplitN(header, ":", 2)
+				if len(parts) != 2 {
+					return nil, fmt.Errorf("invalid header format")
+				}
+				params.Headers[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+			}
+			return params, nil
 		} else {
 			for {
 				// 第一次或文件遍历完，重新打开文件
@@ -242,7 +342,7 @@ func main() {
 					f, err := os.Open(filepath)
 					if err != nil {
 						log.Fatal(err)
-						return "", err
+						return nil, err
 					}
 					file = f
 					scanner = bufio.NewScanner(file)
@@ -250,18 +350,25 @@ func main() {
 				// 读取下一行
 				line := scanner.Text()
 				if strings.TrimSpace(line) != "" {
-					return line, nil
+					return parseRequestLine(line)
 				}
 			}
 		}
 	}
 
 	callback := func(task_param interface{}) error {
-		url, err := getLine()
+		request, err := getRequestParams()
 		if err != nil {
 			return err
 		}
-		_, err = httpGet(_httpCli, url, nil)
+		if *verbose {
+			verboseAny("Request: ", request)
+		}
+
+		body, err := httpRequest(_httpCli, request)
+		if *verbose {
+			verboseAny("Body: ", body)
+		}
 		return err
 	}
 	go_limiter_exec(workers, qps, init, callback)
