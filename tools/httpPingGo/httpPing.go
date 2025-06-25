@@ -314,6 +314,7 @@ func main() {
 
 	var file *os.File
 	var scanner *bufio.Scanner
+	var mu sync.Mutex
 	getRequestParams := func() (*RequestParams, error) {
 		if urlstr != "" {
 			params := &RequestParams{
@@ -330,6 +331,8 @@ func main() {
 			}
 			return params, nil
 		} else {
+			mu.Lock()
+			defer mu.Unlock()
 			for {
 				// 第一次或文件遍历完，重新打开文件
 				if scanner == nil || !scanner.Scan() {
