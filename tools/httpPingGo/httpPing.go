@@ -79,21 +79,27 @@ func (t *Timer) Clear() {
 	t.last_err = nil
 }
 
-func go_limiter_exec(workers int64, qps float64, init func() interface{}, callback func(item interface{}) error) {
+func go_limiter_exec(workers int64, qps float64, init func() interface{}, callback func(item interface{}) (bool, error)) {
 	var counter int64 = 0
 	timer := &Timer{}
 	limiter := rate.NewLimiter(rate.Limit(qps), 1)
+	var aliveWorkers int64 = workers
 	for i := int64(0); i < workers; i++ {
 		param := init()
 		go func(task_param interface{}) {
 			for {
+				var exit bool
 				err := limiter.Wait(context.Background())
 				if err != nil {
 					log.Printf("rate limit error: %v", err)
 					continue
 				}
 				start := time.Now()
-				err = callback(task_param)
+				exit, err = callback(task_param)
+				if err == nil && exit {
+					atomic.AddInt64(&aliveWorkers, -1)
+					break
+				}
 				end := time.Now()
 
 				timer.Record(end.Sub(start), err)
@@ -109,7 +115,6 @@ func go_limiter_exec(workers int64, qps float64, init func() interface{}, callba
 		// 等待信号
 		<-sigs
 		// 输出消息并退出程序
-		// fmt.Println("程序已中断")
 		os.Exit(0)
 	}()
 
@@ -122,8 +127,13 @@ func go_limiter_exec(workers int64, qps float64, init func() interface{}, callba
 		if last_err != nil {
 			err_str = last_err.Error()
 		}
-		fmt.Printf("%s qps:%d, ok:%d, error:%d, avg:(%.2fms), p95:(%.2fms), p99:(%.2fms), max:(%.2fms) %s\n",
-			time.Now().Format("2006-01-02 15:04:05"), qps, ok_cnt, error_cnt, float64(avg.Microseconds())/1e3, float64(p95.Microseconds())/1e3, float64(p99.Microseconds())/1e3, float64(max.Microseconds())/1e3, err_str)
+		if qps > 0 {
+			fmt.Printf("%s qps:%d, ok:%d, error:%d, avg:(%.2fms), p95:(%.2fms), p99:(%.2fms), max:(%.2fms) %s\n",
+				time.Now().Format("2006-01-02 15:04:05"), qps, ok_cnt, error_cnt, float64(avg.Microseconds())/1e3, float64(p95.Microseconds())/1e3, float64(p99.Microseconds())/1e3, float64(max.Microseconds())/1e3, err_str)
+		}
+		if aliveWorkers <= 0 {
+			os.Exit(0)
+		}
 	}
 }
 
@@ -266,9 +276,11 @@ func main() {
 	var filepath string
 	flag.StringVar(&filepath, "f", "", "filepath. ")
 	var workers int64
-	flag.Int64Var(&workers, "t", 50, "worker thread num. (required)")
+	flag.Int64Var(&workers, "t", 50, "worker thread num, default 50. ")
 	var qps float64
 	flag.Float64Var(&qps, "q", 0, "qps. (required)")
+	var loopCount int64
+	flag.Int64Var(&loopCount, "c", 0, "loop url or file count, default 0 (loop forever).")
 	var headers []string
 	flag.Func("H", "Request headers (e.g. 'content-type:application/json')", func(s string) error {
 		headers = append(headers, s)
@@ -315,6 +327,7 @@ func main() {
 	var file *os.File
 	var scanner *bufio.Scanner
 	var mu sync.Mutex
+	var loopCounter int64 = 0
 	getRequestParams := func() (*RequestParams, error) {
 		if urlstr != "" {
 			params := &RequestParams{
@@ -329,6 +342,12 @@ func main() {
 				}
 				params.Headers[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
 			}
+			if loopCount > 0 {
+				if loopCounter >= loopCount {
+					return nil, nil
+				}
+				atomic.AddInt64(&loopCounter, 1)
+			}
 			return params, nil
 		} else {
 			mu.Lock()
@@ -341,6 +360,12 @@ func main() {
 							log.Println(err)
 						}
 						file.Close()
+					}
+					if loopCount > 0 {
+						if loopCounter >= loopCount {
+							return nil, nil
+						}
+						atomic.AddInt64(&loopCounter, 1)
 					}
 					f, err := os.Open(filepath)
 					if err != nil {
@@ -359,10 +384,13 @@ func main() {
 		}
 	}
 
-	callback := func(task_param interface{}) error {
+	callback := func(task_param interface{}) (bool, error) {
 		request, err := getRequestParams()
 		if err != nil {
-			return err
+			return false, err
+		}
+		if request == nil {
+			return true, nil
 		}
 		if *verbose {
 			verboseAny("Request: ", request)
@@ -372,7 +400,7 @@ func main() {
 		if *verbose {
 			verboseAny("Body: ", body)
 		}
-		return err
+		return false, err
 	}
 	go_limiter_exec(workers, qps, init, callback)
 }
